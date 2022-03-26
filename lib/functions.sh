@@ -1124,7 +1124,7 @@ installLocalPackage() {
         for package in "${finalPackages[@]}"
         do
             echo "${package//[$'\n']}"
-            cp -ap $package $PKG_CACHE/
+            cp -ap $package $PKGDIR/pkg-cache/
             listForPacman+="/var/cache/pacman/pkg/${package##*/} "
         done
 }
