@@ -436,7 +436,7 @@ create_rootfs_img() {
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH useradd -m -g users -u 984 -G wheel,sys,audio,input,video,storage,lp,network,users,power,autologin -p $(openssl passwd -6 oem) -s /bin/bash oem
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH echo "oem ALL=(ALL) NOPASSWD: ALL" > $ROOTFS_IMG/rootfs_$ARCH/etc/sudoers.d/g_oem
         case "$EDITION" in
-            desq|wayfire|sway)
+            desq|kde-plasma|wayfire|sway)
                 SESSION=$(ls $ROOTFS_IMG/rootfs_$ARCH/usr/share/wayland-sessions/ | head -1)
                 ;;
             *)
