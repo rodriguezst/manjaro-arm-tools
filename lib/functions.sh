@@ -540,11 +540,11 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
 	info "Making settings for factory specific image..."
         case "$EDITION" in
             kde-plasma)
-                sed -i s/"manjaro-arm.png"/"manjaro-pine64-2b.png"/g $ROOTFS_IMG/rootfs_$ARCH/etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc
+                sed -i s@'Bamboo at Night/contents/images/5120x2880.png'@'manjaro-arm/generic/manjaro-pine64-2b.png'@g $ROOTFS_IMG/rootfs_$ARCH/etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc
                 ;;
             xfce)
-                sed -i s/"manjaro-arm.png"/"manjaro-pine64-2b.png"/g $ROOTFS_IMG/rootfs_$ARCH/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
-                sed -i s/"manjaro-arm.png"/"manjaro-pine64-2b.png"/g $ROOTFS_IMG/rootfs_$ARCH/etc/lightdm/lightdm-gtk-greeter.conf
+                sed -i s/"manjaro-bamboo.png"/"manjaro-pine64-2b.png"/g $ROOTFS_IMG/rootfs_$ARCH/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+                sed -i s/"manjaro-bamboo.png"/"manjaro-pine64-2b.png"/g $ROOTFS_IMG/rootfs_$ARCH/etc/lightdm/lightdm-gtk-greeter.conf
                 ;;
         esac
         sed -i "s/arm-$BRANCH/arm-stable/g" $ROOTFS_IMG/rootfs_$ARCH/etc/pacman.d/mirrorlist
@@ -809,7 +809,7 @@ create_img() {
                     if [[ "$DEVICE" = "jetson-nano" ]]; then
                         parted -s $LDEV set 1 esp on
                     fi
-                    partprobe $LDEV 1> /dev/null 2>&1
+                    partprobe $LDEV #1> /dev/null 2>&1
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO 1> /dev/null 2>&1
                     mkfs.ext4 -O ^metadata_csum,^64bit "${LDEV}p2" -L ROOT_MNJRO 1> /dev/null 2>&1
 
