@@ -809,7 +809,7 @@ create_img() {
                     if [[ "$DEVICE" = "jetson-nano" ]]; then
                         parted -s $LDEV set 1 esp on
                     fi
-                    partprobe $LDEV #1> /dev/null 2>&1
+                    partprobe $LDEV 1> /dev/null 2>&1
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO 1> /dev/null 2>&1
                     mkfs.ext4 -O ^metadata_csum,^64bit "${LDEV}p2" -L ROOT_MNJRO 1> /dev/null 2>&1
 
