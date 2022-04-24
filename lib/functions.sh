@@ -693,7 +693,7 @@ create_img() {
             dd if=/dev/zero of=${LDEV} bs=1M count=32 1> /dev/null 2>&1
             #partition with boot and root
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|pinephone)
+                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos 1> /dev/null 2>&1
                     ;;
                 quartz64-bsp)
@@ -770,7 +770,7 @@ create_img() {
             dd if=/dev/zero of=${LDEV} bs=1M count=32 1> /dev/null 2>&1
             #partition with boot and root
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|pinephone)
+                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos 1> /dev/null 2>&1
                     ;;
                 quartz64-bsp)
@@ -901,6 +901,9 @@ create_img() {
     elif [[ "$DEVICE" = "rpi4" ]]; then
         echo "===> Installing default ext4 RPi cmdline.txt /boot..."
         echo "root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 kgdboc=serial0,115200 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
+    elif [[ "$DEVICE" = "rpi4-cutiepi" ]]; then
+        echo "===> Installing default ext4 RPi cmdline.txt /boot..."
+        echo "console=tty1 root=PARTUUID=$ROOT_PART rootfstype=ext4 fsck.repair=yes rootwait plymouth.ignore-serial-consoles video=HDMI-A-2:D video=DSI-1:800x1280@60" > $TMPDIR/boot/cmdline.txt
     fi
     if [[ "$DEVICE" = "rpi4" ]]; then
         echo "===> Installing default config.txt file to /boot/..."
