@@ -684,7 +684,7 @@ create_img() {
     DEV=`echo $LDEV | cut -d "/" -f 3`
 
     #mount image to loop device
-    losetup $LDEV $IMGDIR/$IMGNAME.img 1> /dev/null 2>&1
+    losetup -P $LDEV $IMGDIR/$IMGNAME.img 1> /dev/null 2>&1
 
     case "$FILESYSTEM" in
         btrfs)
