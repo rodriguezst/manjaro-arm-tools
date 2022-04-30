@@ -843,7 +843,7 @@ create_img() {
             dd if=$TMPDIR/boot/u-boot.bin of=${LDEV} conv=fsync,notrunc bs=512 skip=1 seek=1 1> /dev/null 2>&1
             ;;
         # Allwinner uboots
-        pinebook|pine64-lts|pine64|pinetab|pine-h64)
+        pinebook|pine64-lts|pine64|pinetab|pine-h64|opi3-lts)
             dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE.bin of=${LDEV} conv=fsync bs=128k seek=1 1> /dev/null 2>&1
             ;;
         pinephone)
