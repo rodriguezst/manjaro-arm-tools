@@ -89,54 +89,7 @@ signarmpkgs
 ```
 
 ## buildarmimg
-**Supported devices:**
-* edgev
-* gsking-x
-* gtking-pro
-* nanopc-t4
-* nanopi-neo-plus2
-* oc2
-* oc4
-* on2
-* on2-plus
-* pine64-lts
-* pine-h64
-* pinebook
-* pinephone
-* pinetab
-* pbpro
-* pbpro-bsp
-* quartz64-bsp (new)
-* rpi3 (not the A/B+ models it seems)
-* rpi4
-* rock64
-* roc-cc
-* rockpi4b
-* rockpi4c
-* rockpro64
-* stationp1
-* vim1
-* vim2
-* vim3
-
-
-**Supported editions:**
-
-* minimal
-* lxqt
-* kde-plasma
-* mate
-* xfce
-* i3
-* sway
-* gnome (experimental)
-* budgie (experimental)
-* plasma-mobile (experimental)
-* phosh (experimental)
-* cubocore (not complete yet)
-* jade (not comlete yet)
-* server (not complete yet, unmaintained)
-
+For a list of supported devices and editions, please look at the Profiles repository linked below.
 
 This script will compress the image file and place it in `/var/cache/manjaro-arm-tools/img/`
 
