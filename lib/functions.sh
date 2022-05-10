@@ -982,6 +982,8 @@ create_img() {
         echo "PARTUUID=$ROOT_PART   /   $FILESYSTEM     defaults    0   1" >> $TMPDIR/root/etc/fstab
     fi
     
+    ## TODO
+    ## Figure out how to generate a working .efi file in our rootfs for the efi devices
     
     # Clean up
     info "Cleaning up image..."
