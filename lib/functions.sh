@@ -741,8 +741,8 @@ create_img() {
                     #copy rootfs contents over to the FS
                     info "Creating subvolumes..."
                     mkdir -p $TMPDIR/root
-                    mkdir -p $TMPDIR/boot/efi
-                    mount ${LDEV}p1 $TMPDIR/boot/efi
+                    mkdir -p $TMPDIR/boot
+                    mount ${LDEV}p1 $TMPDIR/boot
                     # Do subvolumes
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ 1> /dev/null 2>&1
@@ -753,7 +753,7 @@ create_img() {
                     mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
                     info "Copying files to image..."
                     cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
-                    #mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
+                    mv $TMPDIR/root/boot/* $TMPDIR/boot
                     ;;
                 *)
                     parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
@@ -835,11 +835,11 @@ create_img() {
                     mkfs.ext4 -O ^metadata_csum,^64bit "${LDEV}p2" -L ROOT_MNJRO 1> /dev/null 2>&1
                     info "Copying files to image..."
                     mkdir -p $TMPDIR/root
-                    mkdir -p $TMPDIR/boot/efi
-                    mount ${LDEV}p1 $TMPDIR/boot/efi
+                    mkdir -p $TMPDIR/boot
+                    mount ${LDEV}p1 $TMPDIR/boot
                     mount ${LDEV}p2 $TMPDIR/root
                     cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
-                    #mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
+                    mv $TMPDIR/root/boot/* $TMPDIR/boot
                     ;;
                 *)
                     parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
@@ -924,9 +924,9 @@ create_img() {
         ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{print $2}')
     fi
     echo "Boot PARTUUID is $BOOT_PART..."
-    if [[ "$DEVICE" = "generic-efi" ]]; then
-      sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
-    fi
+    #if [[ "$DEVICE" = "generic-efi" ]]; then
+    #  sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
+    #fi
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
     echo "Root PARTUUID is $ROOT_PART..."
     if [ -f $TMPDIR/boot/extlinux/extlinux.conf ]; then
@@ -991,11 +991,11 @@ create_img() {
         umount $TMPDIR/root/home
     fi
     umount $TMPDIR/root
-    if [[ "$DEVICE" = "generic-efi" ]]; then
-        umount $TMPDIR/boot/efi
-    else
+    #if [[ "$DEVICE" = "generic-efi" ]]; then
+    #    umount $TMPDIR/boot/efi
+    #else
         umount $TMPDIR/boot
-    fi
+    #fi
     losetup -d $LDEV 1> /dev/null 2>&1
     rm -r $TMPDIR/root $TMPDIR/boot
     partprobe $LDEV 1> /dev/null 2>&1
