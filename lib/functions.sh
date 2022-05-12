@@ -726,11 +726,40 @@ create_img() {
                     cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
                     mv $TMPDIR/root/boot/* $TMPDIR/boot/
                     ;;
+                generic-efi)
+                    parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
+                    parted -s $LDEV mkpart primary fat32 0% 512M 1> /dev/null 2>&1
+                    START=`cat /sys/block/$DEV/${DEV}p1/start`
+                    SIZE=`cat /sys/block/$DEV/${DEV}p1/size`
+                    END_SECTOR=$(expr $START + $SIZE)
+                    parted -s $LDEV mkpart primary btrfs "${END_SECTOR}s" 100% 1> /dev/null 2>&1
+                    parted -s $LDEV set 1 esp on
+                    partprobe $LDEV 1> /dev/null 2>&1
+                    mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO 1> /dev/null 2>&1
+                    mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p2" 1> /dev/null 2>&1
+                
+                    #copy rootfs contents over to the FS
+                    info "Creating subvolumes..."
+                    mkdir -p $TMPDIR/root
+                    mkdir -p $TMPDIR/boot
+                    mount ${LDEV}p1 $TMPDIR/boot
+                    # Do subvolumes
+                    mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
+                    btrfs su cr $TMPDIR/root/@ 1> /dev/null 2>&1
+                    btrfs su cr $TMPDIR/root/@home 1> /dev/null 2>&1
+                    umount $TMPDIR/root
+                    mount -o compress=zstd,subvol=@ "${LDEV}p2" $TMPDIR/root
+                    mkdir -p $TMPDIR/root/home
+                    mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
+                    info "Copying files to image..."
+                    cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
+                    mv $TMPDIR/root/boot/* $TMPDIR/boot
+                    ;;
                 *)
                     parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
                     ;;
             esac
-            if [[ "$DEVICE" != "quartz64-bsp" ]]; then
+            if [[ "$DEVICE" != "quartz64-bsp" ]] && [[ "$DEVICE" != "generic-efi" ]]; then
                 parted -s $LDEV mkpart primary fat32 32M 256M 1> /dev/null 2>&1
                 if [[ "$DEVICE" = "generic" ]]; then
                     parted -s $LDEV mkpart primary fat32 0% 256M 1> /dev/null 2>&1
@@ -793,11 +822,30 @@ create_img() {
                     cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
                     mv $TMPDIR/root/boot/* $TMPDIR/boot/
                     ;;
+                generic-efi)
+                    parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
+                    parted -s $LDEV mkpart primary fat32 0% 512M 1> /dev/null 2>&1
+                    START=`cat /sys/block/$DEV/${DEV}p1/start`
+                    SIZE=`cat /sys/block/$DEV/${DEV}p1/size`
+                    END_SECTOR=$(expr $START + $SIZE)
+                    parted -s $LDEV mkpart primary ext4 "${END_SECTOR}s" 100% 1> /dev/null 2>&1
+                    parted -s $LDEV set 1 esp on
+                    partprobe $LDEV 1> /dev/null 2>&1
+                    mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO 1> /dev/null 2>&1
+                    mkfs.ext4 -O ^metadata_csum,^64bit "${LDEV}p2" -L ROOT_MNJRO 1> /dev/null 2>&1
+                    info "Copying files to image..."
+                    mkdir -p $TMPDIR/root
+                    mkdir -p $TMPDIR/boot
+                    mount ${LDEV}p1 $TMPDIR/boot
+                    mount ${LDEV}p2 $TMPDIR/root
+                    cp -ra $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root/
+                    mv $TMPDIR/root/boot/* $TMPDIR/boot
+                    ;;
                 *)
                     parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
                     ;;
             esac
-                if [[ "$DEVICE" != "quartz64-bsp" ]]; then
+                if [[ "$DEVICE" != "quartz64-bsp" ]] && [[ "$DEVICE" != "generic-efi" ]]; then
                     parted -s $LDEV mkpart primary fat32 32M 256M 1> /dev/null 2>&1
                     if [[ "$DEVICE" = "generic" ]]; then
                         parted -s $LDEV mkpart primary fat32 0% 256M 1> /dev/null 2>&1
@@ -826,7 +874,7 @@ create_img() {
     esac
         
     # Flash bootloader
-    if [[ "$DEVICE" != "generic" ]]; then
+    if [[ "$DEVICE" != "generic" ]] && [[ "$DEVICE" != "generic-efi" ]]; then
     info "Flashing bootloader..."
     case "$DEVICE" in
     # AMLogic uboots
@@ -876,6 +924,9 @@ create_img() {
         ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{print $2}')
     fi
     echo "Boot PARTUUID is $BOOT_PART..."
+    #if [[ "$DEVICE" = "generic-efi" ]]; then
+    #  sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
+    #fi
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
     echo "Root PARTUUID is $ROOT_PART..."
     if [ -f $TMPDIR/boot/extlinux/extlinux.conf ]; then
@@ -931,6 +982,8 @@ create_img() {
         echo "PARTUUID=$ROOT_PART   /   $FILESYSTEM     defaults    0   1" >> $TMPDIR/root/etc/fstab
     fi
     
+    ## TODO
+    ## Figure out how to generate a working .efi file in our rootfs for the efi devices
     
     # Clean up
     info "Cleaning up image..."
@@ -938,7 +991,11 @@ create_img() {
         umount $TMPDIR/root/home
     fi
     umount $TMPDIR/root
-    umount $TMPDIR/boot
+    #if [[ "$DEVICE" = "generic-efi" ]]; then
+    #    umount $TMPDIR/boot/efi
+    #else
+        umount $TMPDIR/boot
+    #fi
     losetup -d $LDEV 1> /dev/null 2>&1
     rm -r $TMPDIR/root $TMPDIR/boot
     partprobe $LDEV 1> /dev/null 2>&1
