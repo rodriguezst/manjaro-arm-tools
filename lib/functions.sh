@@ -898,7 +898,7 @@ create_img() {
             dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE-528.bin of=${LDEV} conv=fsync bs=8k seek=1 1> /dev/null 2>&1
             ;;
         # Rockchip RK33XX and RK35XX mainline uboots
-        pbpro|rockpro64|rockpi4b|rockpi4c|nanopc-t4|rock64|roc-cc|stationp1|pinephonepro|clockworkpi-a06|quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-p2)
+        pbpro|rockpro64|rockpi4b|rockpi4c|nanopc-t4|rock64|roc-cc|stationp1|pinephonepro|clockworkpi-a06|quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-p2|om1)
             dd if=$TMPDIR/boot/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync 1> /dev/null 2>&1
             dd if=$TMPDIR/boot/u-boot.itb of=${LDEV} seek=16384 conv=notrunc,fsync 1> /dev/null 2>&1
             ;;
