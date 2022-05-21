@@ -693,7 +693,7 @@ create_img() {
             dd if=/dev/zero of=${LDEV} bs=1M count=32 1> /dev/null 2>&1
             #partition with boot and root
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
+                om1|oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos 1> /dev/null 2>&1
                     ;;
                 quartz64-bsp)
@@ -799,7 +799,7 @@ create_img() {
             dd if=/dev/zero of=${LDEV} bs=1M count=32 1> /dev/null 2>&1
             #partition with boot and root
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
+                om1|oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos 1> /dev/null 2>&1
                     ;;
                 quartz64-bsp)
