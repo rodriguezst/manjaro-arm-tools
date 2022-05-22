@@ -965,6 +965,7 @@ create_img() {
         echo "kernel=kernel8.img" >> $TMPDIR/boot/config.txt
         echo "arm_64bit=1" >> $TMPDIR/boot/config.txt
         echo "disable_overscan=1" >> $TMPDIR/boot/config.txt
+        echo "dtparam=krnbt=on" >> $TMPDIR/boot/config.txt
         echo "" >> $TMPDIR/boot/config.txt
         echo "#enable sound" >> $TMPDIR/boot/config.txt
         echo "dtparam=audio=on" >> $TMPDIR/boot/config.txt
