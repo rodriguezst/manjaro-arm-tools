@@ -971,7 +971,7 @@ create_img() {
         echo "#hdmi_drive=2" >> $TMPDIR/boot/config.txt
         echo "" >> $TMPDIR/boot/config.txt
         echo "#enable vc4" >> $TMPDIR/boot/config.txt
-        echo "dtoverlay=vc4-fkms-v3d" >> $TMPDIR/boot/config.txt
+        echo "dtoverlay=vc4-kms-v3d" >> $TMPDIR/boot/config.txt
         echo "max_framebuffers=2"  >> $TMPDIR/boot/config.txt
         echo "disable_splash=1" >> $TMPDIR/boot/config.txt
     fi
