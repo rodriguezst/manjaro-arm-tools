@@ -948,10 +948,10 @@ create_img() {
     
     if [[ "$DEVICE" = "rpi4" ]] && [[ "$FILESYSTEM" = "btrfs" ]]; then
         echo "===> Installing default btrfs RPi cmdline.txt /boot..."
-        echo "rootflags=subvol=@ root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 kgdboc=serial0,115200 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
+        echo "rootflags=subvol=@ root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
     elif [[ "$DEVICE" = "rpi4" ]]; then
         echo "===> Installing default ext4 RPi cmdline.txt /boot..."
-        echo "root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 kgdboc=serial0,115200 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
+        echo "root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
     elif [[ "$DEVICE" = "rpi4-cutiepi" ]]; then
         echo "===> Installing default ext4 RPi cmdline.txt /boot..."
         echo "console=tty1 root=PARTUUID=$ROOT_PART rootfstype=ext4 fsck.repair=yes rootwait plymouth.ignore-serial-consoles video=HDMI-A-2:D video=DSI-1:800x1280@60" > $TMPDIR/boot/cmdline.txt
