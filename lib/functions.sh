@@ -722,6 +722,7 @@ create_img() {
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
                     ;;
                 generic)
+                    parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 0% 512M 1> /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
                     SIZE=`cat /sys/block/$DEV/${DEV}p1/size`
@@ -864,6 +865,7 @@ create_img() {
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
                     ;;
                 generic)
+                    parted -s $LDEV mklabel gpt 1> /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 0% 512M 1> /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
                     SIZE=`cat /sys/block/$DEV/${DEV}p1/size`
