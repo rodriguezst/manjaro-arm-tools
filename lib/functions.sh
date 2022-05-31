@@ -976,10 +976,15 @@ create_img() {
             dd if=$TMPDIR/boot/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync 1> /dev/null 2>&1
             dd if=$TMPDIR/boot/u-boot.itb of=${LDEV} seek=16384 conv=notrunc,fsync 1> /dev/null 2>&1
             ;;
+        # Pinebook Pro BSP Uboot is no longer packaged, so download directly from gitlab
         pbpro-bsp)
-            dd if=$TMPDIR/boot/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync 1> /dev/null 2>&1
-            dd if=$TMPDIR/boot/uboot.img of=${LDEV} seek=16384 conv=notrunc,fsync 1> /dev/null 2>&1
-            dd if=$TMPDIR/boot/trust.img of=${LDEV} seek=24576 conv=notrunc,fsync 1> /dev/null 2>&1
+            wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/idbloader.img" -O $TMPDIR/idbloader.img
+            wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/uboot.img" -O $TMPDIR/uboot.img
+            wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/trust.img" -O $TMPDIR/trust.img
+            dd if=$TMPDIR/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync 1> /dev/null 2>&1
+            dd if=$TMPDIR/uboot.img of=${LDEV} seek=16384 conv=notrunc,fsync 1> /dev/null 2>&1
+            dd if=$TMPDIR/trust.img of=${LDEV} seek=24576 conv=notrunc,fsync 1> /dev/null 2>&1
+            rm $TMPDIR/{idbloader,uboot,trust}.img
             ;;
         # Rockchip RK35XX uboots
         quartz64-bsp)
