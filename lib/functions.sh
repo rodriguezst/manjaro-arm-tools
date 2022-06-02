@@ -982,7 +982,7 @@ create_img() {
             wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/uboot.img" -O $TMPDIR/uboot.img
             wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/trust.img" -O $TMPDIR/trust.img
             mkdir -p $TMPDIR/boot/extlinux
-            wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/master/extlinux.conf" -O $TMPDIR/boot/extlinux/extlinux.conf
+            wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/extlinux.conf" -O $TMPDIR/boot/extlinux/extlinux.conf
             dd if=$TMPDIR/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync 1> /dev/null 2>&1
             dd if=$TMPDIR/uboot.img of=${LDEV} seek=16384 conv=notrunc,fsync 1> /dev/null 2>&1
             dd if=$TMPDIR/trust.img of=${LDEV} seek=24576 conv=notrunc,fsync 1> /dev/null 2>&1
