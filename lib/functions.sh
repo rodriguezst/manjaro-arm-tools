@@ -968,6 +968,9 @@ create_img() {
         pinebook|pine64-lts|pine64|pinetab|pine-h64|opi3-lts)
             dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE.bin of=${LDEV} conv=fsync bs=128k seek=1 1> /dev/null 2>&1
             ;;
+        opi3-lts)
+            dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-orangepi3-lts.bin of=${LDEV} conv=fsync bs=128k seek=1 1> /dev/null 2>&1
+            ;;
         pinephone)
             dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE-528.bin of=${LDEV} conv=fsync bs=8k seek=1 1> /dev/null 2>&1
             ;;
