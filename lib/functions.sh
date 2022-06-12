@@ -332,7 +332,7 @@ create_rootfs_img() {
     # Install device and editions specific packages
     mount -o bind $PKGDIR/pkg-cache $PKG_CACHE
     case "$EDITION" in
-        cubocore|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
+        cubocore|gnome-mobile|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -Syyu base systemd systemd-libs manjaro-system manjaro-release $PKG_EDITION $PKG_DEVICE --noconfirm || abort
             ;;
         minimal|server)
@@ -391,7 +391,7 @@ create_rootfs_img() {
             # Lock root user
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH passwd --lock root
             ;;
-        phosh|lomiri)
+        gnome-mobile|phosh|lomiri)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH groupadd -r autologin
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH gpasswd -a "$USER" autologin
             # Lock root user
