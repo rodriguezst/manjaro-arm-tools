@@ -4,17 +4,15 @@
 LIBDIR=/usr/share/manjaro-arm-tools/lib
 ARCH="aarch64"
 
-#imports
+# Import the library
 source $LIBDIR/functions.sh 
 enable_colors
 
-# check if root
-checkroot
+# Check for root
+check_root
 
-# check if script is already running
-checkrunning
-
-# Functions
+# Check is the script already running
+check_running
 
 create_rootfs () {
     msg "Creating rootfs..."
@@ -31,13 +29,13 @@ create_rootfs () {
     $LIBDIR/pacstrap -G -M -C $LIBDIR/pacman.conf.$ARCH $BUILDDIR/$ARCH pacman
 
     # Enable cross architecture Chrooting
-    cp /usr/bin/qemu-aarch64-static $BUILDDIR/$ARCH/usr/bin/
+    cp /usr/bin/qemu-aarch64-static $BUILDDIR/$ARCH/usr/bin
     
     # fix SSL in the rootfs
     $NSPAWN $BUILDDIR/$ARCH update-ca-trust
     
     rm -f $BUILDDIR/$ARCH/var/cache/pacman/pkg/*
-    $NSPAWN $BUILDDIR/$ARCH pacman-mirrors -f5 1> /dev/null 2>&1
+    $NSPAWN $BUILDDIR/$ARCH pacman-mirrors -f5 > /dev/null 2>&1
 }
 
 compress_rootfs () {
@@ -47,7 +45,7 @@ compress_rootfs () {
     rm -rf $BUILDDIR/$ARCH
 }
 
-#Arguments 
+# Available options
 opt=":a:h"
 
 while getopts "${opt}" arg; do
@@ -64,7 +62,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac

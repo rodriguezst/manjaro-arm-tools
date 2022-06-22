@@ -1,22 +1,24 @@
 #! /bin/bash
 
-# Set globals
-LIBDIR=/usr/share/manjaro-arm-tools/lib
-KEEPROOTFS=true
-EXTRACTED=false
+# Configuration variables
+LIBDIR='/usr/share/manjaro-arm-tools/lib'
+KEEPROOTFS='true'
+EXTRACTED='false'
 
-#imports
-source $LIBDIR/functions.sh
-CHROOTDIR=$ROOTFS_IMG/rootfs_$ARCH
-PKG_CACHE=$CHROOTDIR/var/cache/pacman/pkg
+# Import the library
+source "${LIBDIR}/functions.sh"
 
-# check if root
-checkroot
+# Configuration variables
+CHROOTDIR="${ROOTFS_IMG}/rootfs_${ARCH}"
+PKG_CACHE="${CHROOTDIR}/var/cache/pacman/pkg"
 
-# check if script is already running
-checkrunning
+# Check for root
+check_root
 
-#Arguments 
+# Check is the script already running
+check_running
+
+# Available options
 opt=":e:d:v:i:f:nxh"
 
 while getopts "${opt}" arg; do
@@ -37,7 +39,8 @@ while getopts "${opt}" arg; do
       EXTRACTED=true
       ;;
     i)
-      ADD_PACKAGE="${OPTARG}"
+      ADD_PACKAGES="${OPTARG}"
+      check_local_pkgs
       ;;
     f)
       FLASHVERSION="${OPTARG}"
@@ -52,7 +55,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac
@@ -81,7 +84,7 @@ timer_start=$(get_timer)
 PKG_DEVICE=$(grep "^[^#;]" $PROFILES/arm-profiles/devices/$DEVICE | awk '{print $1}')
 PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/minimal | awk '{print $1}')
 SRV_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/services/minimal | awk '{print $1}')
-cat $PROFILES/arm-profiles/services/minimal | sed -e '/^#/d' >$srv_list
+cat $PROFILES/arm-profiles/services/minimal | sed -e '/^#/d' > $SERVICES_LIST
 
 #start timer
 #timer=$(get_timer)

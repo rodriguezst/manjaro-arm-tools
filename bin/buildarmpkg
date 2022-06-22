@@ -1,22 +1,24 @@
 #!/bin/bash
 
-# Set globals
-LIBDIR=/usr/share/manjaro-arm-tools/lib
-BUILDCLEAN=true
-INSTALL_NEW=false
+# Configuration variables
+LIBDIR='/usr/share/manjaro-arm-tools/lib'
+BUILDCLEAN='true'
+INSTALL_NEW='false'
 
-#imports
-source $LIBDIR/functions.sh
-CHROOTDIR=$BUILDDIR/$ARCH
-PKG_CACHE=$CHROOTDIR/var/cache/pacman/pkg
+# Import the library
+source "${LIBDIR}/functions.sh"
 
-# check if root
-checkroot
+# Configuration variables
+CHROOTDIR="${BUILDDIR}/${ARCH}"
+PKG_CACHE="${CHROOTDIR}/var/cache/pacman/pkg"
 
-# check if script is already running
-checkrunning
+# Check for root
+check_root
 
-#Arguments 
+# Check is the script already running
+check_running
+
+# Available options
 opt=":p:a:i:r:nb:kh"
 
 while getopts "${opt}" arg; do
@@ -34,8 +36,8 @@ while getopts "${opt}" arg; do
       BRANCH="${OPTARG}"
       ;;
     i)
-      ADD_PACKAGE="${OPTARG}"
-      verifyLocalPackage
+      ADD_PACKAGES="${OPTARG}"
+      check_local_pkgs
       ;;
     n)
       INSTALL_NEW=true
@@ -52,7 +54,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac
@@ -60,38 +62,37 @@ done
 
 enable_colors
 
-#Need both package and architecture
+# Both package and architecture are needed
 if [ "x" == "x$PACKAGE" ]; then
-  echo "-p [option] is required"
+  echo "Option -p must be specified, aborting"
   exit
 fi
 
-#Build the 'any' packages on aarch64
+# Build the 'any' packages on aarch64
 if [ $ARCH == "any" ]; then
     ARCH="aarch64"
 fi
 
-#Make sure only a known branch is used
-checkbranch
+# Make sure only a known branch is used
+check_branch
 
-# start the timer
+# Start the timer
 timer_start=$(get_timer)
    
 if [[ "$BUILDCLEAN" = "false" && ! -d $CHROOTDIR ]]; then
-    msg "Rootfs does not exist. Please run this command again without the -k option to generate a rootfs to use..."
+    msg "Rootfs not found, aborting; omit the -k option to generate a rootfs"
     exit 1
-    
 elif [[ "$BUILDCLEAN" = "true" ]]; then
-    #create the rootfs to build in
+    # Create the rootfs to build within
     create_rootfs_pkg
 fi
 
-#build the package
+# Build the package
 build_pkg
 
-#export the package and clean up
+# Export the package and clean up
 export_and_clean
 prune_cache
 
-# show timer
+# Show the timer
 show_elapsed_time "${FUNCNAME}" "${timer_start}"

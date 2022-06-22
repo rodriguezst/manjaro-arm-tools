@@ -3,17 +3,17 @@
 LIBDIR=/usr/share/manjaro-arm-tools/lib
 source $LIBDIR/functions.sh
 
-# check if root
-checkroot
+# Check for root
+check_root
 
-#Arguments 
+# Available options
 opt="fhp"
 
 while getopts "${opt}" arg; do
   case $arg in
     f)
       echo "Forcing git update..."
-      rm -rf $PROFILES/arm-profiles/
+      rm -rf $PROFILES/arm-profiles
       ;;
     p)
       echo "Using branch 'pp-factory'..."
@@ -28,7 +28,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac
