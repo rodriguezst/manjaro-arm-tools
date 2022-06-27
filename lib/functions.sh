@@ -369,7 +369,7 @@ create_rootfs_img() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
         mount --bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
-        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U local/*.pkg.tar.* --noconfirm || abort
+        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U /local/*.pkg.tar.* --noconfirm
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -1223,7 +1223,7 @@ build_pkg() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
         mount --bind "$ADD_PACKAGES" "$CHROOTDIR/local"
-        $NSPAWN $CHROOTDIR pacman -U local/*.pkg.tar.* --noconfirm
+        $NSPAWN $CHROOTDIR pacman -U /local/*.pkg.tar.* --noconfirm
         STATUS=$?
         umount "$CHROOTDIR/local"
         rmdir "$CHROOTDIR/local"
