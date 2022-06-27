@@ -1300,7 +1300,7 @@ check_local_pkgs() {
         echo "Directory ${ADD_PACKAGES} not a valid path, aborting"
         exit 1
     fi
-    if ! ls "${ADD_PACKAGES}/*.pkg.tar.*" > /dev/null 2>&1; then
+    if ! ls ${ADD_PACKAGES}/*.pkg.tar.* > /dev/null 2>&1; then
         echo "Directory ${ADD_PACKAGES} contains no packages, aborting"
         exit 1
     fi
