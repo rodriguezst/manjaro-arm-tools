@@ -57,12 +57,12 @@ Options inside `[` `]` are optional. Use `-h` to see what the defaults are.
 **Syntax**
 
 ```
-sudo buildarmpkg -p package [-a architecture] [-k] [-i package file] [-b branch]
+sudo buildarmpkg -p package [-a architecture] [-k] [-i packages] [-b branch]
 ```
 
-To use several local packages, use the `,` separator (no spaces between the package names and the comma):
+To use one or more local packages, put them all in the desired directory, named `packages` in the example below, before running the utility:
 ```
-sudo buildarmpkg -p package [-a architecture] [-k] [-i package-file-1,package-file-2] [-b branch]
+sudo buildarmpkg -p package [-a architecture] [-k] [-i packages] [-b branch]
 ```
 
 To build an aarch64 package against arm-unstable branch use the following command:
@@ -98,7 +98,7 @@ Profiles that gets used are from this [Gitlab](https://gitlab.manjaro.org/manjar
 **Syntax**
 
 ```
-sudo buildarmimg [-d device] [-e edition] [-v version] [-n] [-x] [-i package-file.pkg.tar.xz] [-b branch] [-m]
+sudo buildarmimg [-d device] [-e edition] [-v version] [-n] [-x] [-i packages] [-b branch] [-m]
 ```
 
 To build a minimal image version 18.07 for the raspberry pi 3 on arm-unstable branch with bmap support:
@@ -113,16 +113,16 @@ To build a minimal version 18.08 RC1 for the odroid-c2 with a new rootfs downloa
 sudo buildarmimg -d oc2 -e minimal -v 18.08-rc1 -n
 ```
 
-To build an lxqt version with a local package installed for the rock64:
+To build an lxqt version with one or more local packages installed for the rock64:
 
 ```
-sudo buildarmimg -d rock64 -e lxqt -i package-name-1.0-1-aarch64.pkg.tar.xz
+sudo buildarmimg -d rock64 -e lxqt -i packages
 ```
 
-To build a xfce version with multiple local packages installed for the rock64 use `,` separator (no empty space between the file names):
+To build an xfce version with one or more local packages installed for the rock64, put them all in the desired directory, named `packages` in the example below, before running the utility:
 
 ```
-sudo buildarmimg -d rock64 -e xfce -i package-name-1.0-1-aarch64.pkg.tar.xz,second-package-name-1.0-1-aarch64.pkg.tar.xz
+sudo buildarmimg -d rock64 -e xfce -i packages
 ```
 
 To build a kde-plasma edition for the Pinebook Pro with btrfs filesystem:
@@ -144,7 +144,7 @@ Except that it always creates a minimal image, with an already existing image in
 
 **Syntax**
 ```
-sudo buildemmcinstaller [-d device] [-e edition] -v version [-f flashversion] [-n] [-x] [-i package-file.pkg.tar.xz]
+sudo buildemmcinstaller [-d device] [-e edition] -v version [-f flashversion] [-n] [-x] [-i packages]
 ```
 
 So to build an eMMC installer image for KDE Plasma 19.04 on Pinebook:

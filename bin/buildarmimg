@@ -1,25 +1,27 @@
-#! /bin/bash
+#!/bin/bash
 
-# Set globals
-LIBDIR=/usr/share/manjaro-arm-tools/lib
-KEEPROOTFS=true
-EXTRACTED=false
-FACTORY=false
-BMAP=false
+# Configuration variables
+LIBDIR='/usr/share/manjaro-arm-tools/lib'
+KEEPROOTFS='true'
+EXTRACTED='false'
+FACTORY='false'
+BMAP='false'
 CUSTOM_REPO=
 
-#imports
-source $LIBDIR/functions.sh
-CHROOTDIR=$ROOTFS_IMG/rootfs_$ARCH
-PKG_CACHE=$CHROOTDIR/var/cache/pacman/pkg
+# Import the library
+source "${LIBDIR}/functions.sh"
 
-# check if root
-checkroot
+# Configuration variables
+CHROOTDIR="${ROOTFS_IMG}/rootfs_${ARCH}"
+PKG_CACHE="${CHROOTDIR}/var/cache/pacman/pkg"
 
-# check if script is already running
-checkrunning
+# Check for root
+check_root
 
-#Arguments 
+# Check is the script already running
+check_running
+
+# Available options
 opt=":e:d:v:i:b:nfxhk:mos:p:c"
 
 while getopts "${opt}" arg; do
@@ -43,8 +45,8 @@ while getopts "${opt}" arg; do
       EXTRACTED=true
       ;;
     i)
-      ADD_PACKAGE="${OPTARG}"
-      verifyLocalPackage
+      ADD_PACKAGES="${OPTARG}"
+      check_local_pkgs
       ;;
     b)
       BRANCH="${OPTARG}"
@@ -62,10 +64,10 @@ while getopts "${opt}" arg; do
       HOSTNAME="${OPTARG}"
      ;;
     p)
-     FILESYSTEM="${OPTARG}"
-     ;;
+      FILESYSTEM="${OPTARG}"
+      ;;
     \?)
-      echo "Invalid option: -${OPTARG}"
+      echo "Option -${OPTARG} is not valid, aborting"
       exit 1
       ;;
     h|?)
@@ -73,7 +75,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac
@@ -85,28 +87,29 @@ done
 if [ ! -d /var/log/manjaro-arm-tools ]; then
     mkdir -p /var/log/manjaro-arm-tools
 fi
-LOG=/var/log/manjaro-arm-tools/buildarmimg-$(date +%Y-%m-%d-%H.%M).log
+LOG="/var/log/manjaro-arm-tools/buildarmimg-$(date +%Y-%m-%d-%H.%M).log"
 
-IMGNAME=Manjaro-ARM-$EDITION-$DEVICE-$VERSION
+IMGNAME="Manjaro-ARM-$EDITION-$DEVICE-$VERSION"
 ARCH='aarch64'
 
 if [ ! -d "$PROFILES/arm-profiles" ]; then
     getarmprofiles | tee --append "$LOG"
 fi
 
-#Make sure only a known branch is used
-checkbranch
+# Make sure only a known branch is used
+check_branch
 
 # start the timer
 timer_start=$(get_timer)
 
-#Package lists
-# remove ">pinephone " prefix for pinephones and remove lines starting with ">" for other devices, remove everything after #
+# Package lists
 PKG_DEVICE=$(grep "^[^#;]" $PROFILES/arm-profiles/devices/$DEVICE | awk '{print $1}')
-PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/$EDITION | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' )
-cat $PROFILES/arm-profiles/services/$EDITION | sed -e '/^#/d' -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' >$srv_list
+PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/$EDITION | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//')
+cat $PROFILES/arm-profiles/services/$EDITION \
+    | sed -e '/^#/d' -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' \
+    > $SERVICES_LIST
 
-# Creating the rootfs used for the image.
+# Create the rootfs used for the image
 create_rootfs_img | tee --append "$LOG"
 
 case "$DEVICE" in
@@ -117,15 +120,15 @@ case "$DEVICE" in
         create_img | tee --append "$LOG"
         ;;
 esac
-if [ ${BMAP} = true ]; then
+if [ $BMAP = true ]; then
     create_bmap | tee --append "$LOG"
 fi
 if [[ "$EXTRACTED" = "true" ]]; then
-    info "Image not compressed, because you supplied the -x option!"
+    info "Image not compressed, option -x was passed"
 else
-    # Create the compressed file, from the .img file which will get deleted.
+    # Create the compressed file, from the .img file which will get deleted
     compress | tee --append "$LOG"
 fi
 
-# show timer
+# Show the timer
 show_elapsed_time "${FUNCNAME}" "${timer_start}" | tee --append "$LOG"

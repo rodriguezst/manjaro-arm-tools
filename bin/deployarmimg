@@ -11,7 +11,7 @@ TORRENT=false
 source $LIBDIR/functions.sh
 enable_colors
 
-#Arguments 
+# Available options
 opt=":i:d:e:v:k:u:th"
 
 while getopts "${opt}" arg; do
@@ -46,7 +46,7 @@ while getopts "${opt}" arg; do
       exit 1
       ;;
     :)
-      echo "Option -${OPTARG} requires an argument."
+      echo "Option -${OPTARG} requires an argument, aborting"
       exit 1
       ;;
   esac
