@@ -336,7 +336,7 @@ create_rootfs_img() {
     
     # Install device- and edition-specific packages
     msg "Installing packages for $EDITION edition on $DEVICE..."
-    mount -o bind $PKGDIR/pkg-cache $PKG_CACHE
+    mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     case "$EDITION" in
         cubocore|gnome-mobile|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
@@ -368,7 +368,7 @@ create_rootfs_img() {
         local STATUS
         msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
-        mount -o bind "$(realpath $ADD_PACKAGES)" "$ROOTFS_IMG/rootfs_$ARCH/local"
+        mount --bind "$(realpath $ADD_PACKAGES)" "$ROOTFS_IMG/rootfs_$ARCH/local"
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U local/*.pkg.tar.* --noconfirm || abort
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -674,7 +674,7 @@ create_emmc_install() {
     # Install device- and edition-specific packages
     msg "Installing packages for eMMC installer edition of $EDITION on $DEVICE..."
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
-    mount -o bind $PKGDIR/pkg-cache $PKG_CACHE
+    mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher $PKG_EDITION $PKG_DEVICE --noconfirm
 
     # Enable services
@@ -1222,7 +1222,7 @@ build_pkg() {
         local STATUS
         msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
-        mount -o bind "$(realpath $ADD_PACKAGES)" "$CHROOTDIR/local"
+        mount --bind "$(realpath $ADD_PACKAGES)" "$CHROOTDIR/local"
         $NSPAWN $CHROOTDIR pacman -U local/*.pkg.tar.* --noconfirm
         STATUS=$?
         umount "$CHROOTDIR/local"
@@ -1236,10 +1236,10 @@ build_pkg() {
     # Build the actual package
     msg "Importing $PACKAGE build directory to rootfs..."
     $NSPAWN $CHROOTDIR mkdir -p build
-    mount -o bind "$PACKAGE" "$CHROOTDIR/build"
+    mount --bind "$PACKAGE" "$CHROOTDIR/build"
 
     msg "Building $PACKAGE..."
-    mount -o bind $PKGDIR/pkg-cache $PKG_CACHE
+    mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     $NSPAWN $CHROOTDIR pacman -Syu --noconfirm > /dev/null 2>&1
     if [[ $INSTALL_NEW = true ]]; then
         $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asci --noconfirm
