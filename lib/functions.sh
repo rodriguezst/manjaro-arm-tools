@@ -364,12 +364,13 @@ create_rootfs_img() {
             ;;
     esac
 
+    # Install local packages, if requested to do so
     if [[ ! -z "${ADD_PACKAGES}" ]]; then
         local STATUS
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
         mount --bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
-        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U /local/*.pkg.tar.* --noconfirm
+        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U $ADD_PACKAGES_LIST --noconfirm
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -1223,7 +1224,7 @@ build_pkg() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
         mount --bind "$ADD_PACKAGES" "$CHROOTDIR/local"
-        $NSPAWN $CHROOTDIR pacman -U /local/*.pkg.tar.* --noconfirm
+        $NSPAWN $CHROOTDIR pacman -U $ADD_PACKAGES_LIST --noconfirm
         STATUS=$?
         umount "$CHROOTDIR/local"
         rmdir "$CHROOTDIR/local"
@@ -1313,23 +1314,21 @@ check_local_pkgs() {
         exit 1
     fi
 
-    # Save the absolute path for later
-    ADD_PACKAGES=$(realpath ${ADD_PACKAGES})
-
     # Go through all package files in the directory
     local PACKAGE
+    ADD_PACKAGES_LIST=''
     for PACKAGE in ${ADD_PACKAGES}/*.pkg.tar.*; do
         # Check is it a valid tar archive
         tar tf "${PACKAGE}" > /dev/null 2>&1
         if [[ $? != 0 ]]; then
-            echo "Local package $(basename ${PACKAGE}) not a valid tar archive"
+            echo "Local package ${PACKAGE} not a valid tar archive"
             exit 1
         fi
 
         # Check does the archive contain .BUILDINFO
-        tar xfp "${PACKAGE}" -C /tmp .BUILDINFO > /dev/null 2>&1
+        tar xfp "$(realpath ${PACKAGE})" -C /tmp .BUILDINFO > /dev/null 2>&1
         if [[ $? != 0 || ! -f /tmp/.BUILDINFO ]]; then
-            echo "Local package $(basename ${PACKAGE}) invalid, no .BUILDINFO found"
+            echo "Local package ${PACKAGE} invalid, no .BUILDINFO found"
             exit 1
         fi
 
@@ -1338,10 +1337,16 @@ check_local_pkgs() {
         rm -f /tmp/.BUILDINFO
 
         if [[ ${PACKAGE_ARCH} == *"aarch64"* || ${PACKAGE_ARCH} == *"any"* ]]; then
-            echo "Local package $(basename ${PACKAGE}) verified and will be installed"
+            echo "Local package ${PACKAGE} verified and will be installed"
         else
-            echo "Local package $(basename ${PACKAGE}) not compatible with aarch64"
+            echo "Local package ${PACKAGE} not compatible with aarch64"
             exit 1
         fi
+
+        # Save the list of package files for later
+        ADD_PACKAGES_LIST="${ADD_PACKAGES_LIST} /local/$(basename ${PACKAGE})"
     done
+
+    # Save the absolute path for later
+    ADD_PACKAGES="$(realpath ${ADD_PACKAGES})"
 }
