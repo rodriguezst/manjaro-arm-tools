@@ -304,18 +304,18 @@ create_rootfs_img() {
     # Fetch new rootfs, if it does not exist
     if [ ! -f "$ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz" ]; then
         info "Downloading latest $ARCH rootfs archive..."
-        cd $ROOTFS_IMG
-        wget -q -N --show-progress --progress=bar:force:noscroll \
-             https://github.com/manjaro-arm/rootfs/releases/latest/download/Manjaro-ARM-$ARCH-latest.tar.gz
+        wget -q --show-progress --progress=bar:force:noscroll \
+             https://github.com/manjaro-arm/rootfs/releases/latest/download/Manjaro-ARM-$ARCH-latest.tar.gz \
+             -O "$ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz"
     fi
-    
+
     info "Extracting $ARCH rootfs..."
     bsdtar -xpf $ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz -C $ROOTFS_IMG/rootfs_$ARCH
-    
+
     info "Setting up keyrings..."
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --init > /dev/null || abort
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --populate archlinuxarm manjaro manjaro-arm > /dev/null || abort
-    
+
     if [[ ! -z ${CUSTOM_REPO} ]]; then
         info "Adding $CUSTOM_REPO repository to rootfs..."
 
@@ -333,7 +333,7 @@ create_rootfs_img() {
 
     info "Setting branch to $BRANCH..."
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $ROOTFS_IMG/rootfs_$ARCH/etc/pacman.d/mirrorlist
-    
+
     # Install device- and edition-specific packages
     msg "Installing packages for $EDITION edition on $DEVICE..."
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
@@ -366,20 +366,20 @@ create_rootfs_img() {
 
     if [[ ! -z "${ADD_PACKAGES}" ]]; then
         local STATUS
-        msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
+        msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
-        mount --bind "$(realpath $ADD_PACKAGES)" "$ROOTFS_IMG/rootfs_$ARCH/local"
+        mount --bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U local/*.pkg.tar.* --noconfirm || abort
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
-        rm -rf "$ROOTFS_IMG/rootfs_$ARCH/local"
+        rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
         if [[ $STATUS != 0 ]]; then
             echo "Installing local packages failed, aborting"
             exit 1
         fi
     fi
 
-    info "Generating mirrorlist..."
+    info "Generating the list of mirrors..."
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
         pacman-mirrors --protocols https --method random --api --set-branch $BRANCH > /dev/null 2>&1
     
@@ -410,20 +410,20 @@ create_rootfs_img() {
     echo "$HOSTNAME" | tee --append $ROOTFS_IMG/rootfs_$ARCH/etc/hostname > /dev/null 2>&1
     case "$EDITION" in
         cubocore|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell)
-            echo "No OEM setup!"
-            # Lock root user
+            echo "No OEM setup available for the edition, skipping..."
+            # Lock the root user
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH passwd --lock root
             ;;
 
         gnome-mobile|phosh|lomiri)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH groupadd -r autologin
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH gpasswd -a "$USER" autologin
-            # Lock root user
+            # Lock the root user
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH passwd --lock root
             ;;
 
         nemomobile)
-            echo "Create user manjaro for nemomobile..."
+            echo "Creating user manjaro for nemomobile..."
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH groupadd -r autologin
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 useradd -m -g users -G wheel,sys,audio,input,video,storage,lp,network,users,power,autologin \
@@ -440,7 +440,7 @@ create_rootfs_img() {
             ;;
     esac
 
-    # Device does not support Calamares because of low screen resolution, so enable TUI OEM setup on it
+    # This device does not support Calamares because of low screen resolution, so enable TUI OEM setup on it
     if [[ "$DEVICE" = "clockworkpi-a06" ]]; then
         echo "Enabling SSH login for root user for headless setup..."
         sed -i s/"#PermitRootLogin prohibit-password"/"PermitRootLogin yes"/g $ROOTFS_IMG/rootfs_$ARCH/etc/ssh/sshd_config
@@ -659,9 +659,9 @@ create_emmc_install() {
     # Fetch new rootfs, if it does not exist
     if [ ! -f "$ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz" ]; then
         info "Downloading latest $ARCH rootfs archive..."
-        cd $ROOTFS_IMG
-        wget -q -N --show-progress --progress=bar:force:noscroll \
-             https://github.com/manjaro-arm/rootfs/releases/latest/download/Manjaro-ARM-$ARCH-latest.tar.gz
+        wget -q --show-progress --progress=bar:force:noscroll \
+             https://github.com/manjaro-arm/rootfs/releases/latest/download/Manjaro-ARM-$ARCH-latest.tar.gz \
+             -O "$ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz"
     fi
     
     info "Extracting $ARCH rootfs..."
@@ -688,21 +688,21 @@ create_emmc_install() {
     # Anable autologin
     mv $CHROOTDIR/usr/lib/systemd/system/getty\@.service $CHROOTDIR/usr/lib/systemd/system/getty\@.service.bak
     cp $LIBDIR/getty\@.service $CHROOTDIR/usr/lib/systemd/system/getty\@.service
-    
-    if [ -f $IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz ]; then
+
+    if [ -f "$IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz" ]; then
         info "Copying local $DEVICE $EDITION image..."
-        cp $IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz $CHROOTDIR/var/tmp/Manjaro-ARM.img.xz
+        cp -a $IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz $CHROOTDIR/var/tmp/Manjaro-ARM.img.xz
         sync
     else
         info "Downloading $DEVICE $EDITION image..."
-        cd $CHROOTDIR/var/tmp
         wget -q --show-progress --progress=bar:force:noscroll -O Manjaro-ARM.img.xz \
-             https://github.com/manjaro-arm/$DEVICE-images/releases/download/$VERSION/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz
+             https://github.com/manjaro-arm/$DEVICE-images/releases/download/$VERSION/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz \
+             -O "$CHROOTDIR/var/tmp/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz"
     fi
-    
-    info "Cleaning rootfs for unwanted files..."
+
+    info "Removing unwanted files from rootfs..."
     prune_cache
-    rm $CHROOTDIR/usr/bin/qemu-aarch64-static
+    rm -f $CHROOTDIR/usr/bin/qemu-aarch64-static
     rm -rf $CHROOTDIR/var/log/*
     rm -rf $CHROOTDIR/etc/*.pacnew
     rm -rf $CHROOTDIR/usr/lib/systemd/system/systemd-firstboot.service
@@ -1068,15 +1068,15 @@ create_img() {
 
             # Pinebook Pro BSP U-boot is no longer packaged, so download it directly from the GitLab
             pbpro-bsp)
-                wget -q -N "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/idbloader.img" \
+                wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/idbloader.img" \
                      -O $TMPDIR/idbloader.img
-                wget -q -N "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/uboot.img" \
+                wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/uboot.img" \
                      -O $TMPDIR/uboot.img
-                wget -q -N "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/trust.img" \
+                wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/trust.img" \
                      -O $TMPDIR/trust.img
 
                 mkdir -p $TMPDIR/boot/extlinux
-                wget -q -N "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/extlinux.conf" \
+                wget -q "https://gitlab.manjaro.org/manjaro-arm/packages/core/uboot-pinebookpro-bsp/-/raw/v1.24.126/extlinux.conf" \
                      -O $TMPDIR/boot/extlinux/extlinux.conf
 
                 dd if=$TMPDIR/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync > /dev/null 2>&1
@@ -1220,13 +1220,13 @@ build_pkg() {
     # Install local packages to rootfs before building
     if [[ ! -z "${ADD_PACKAGES}" ]]; then
         local STATUS
-        msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
+        msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
-        mount --bind "$(realpath $ADD_PACKAGES)" "$CHROOTDIR/local"
+        mount --bind "$ADD_PACKAGES" "$CHROOTDIR/local"
         $NSPAWN $CHROOTDIR pacman -U local/*.pkg.tar.* --noconfirm
         STATUS=$?
         umount "$CHROOTDIR/local"
-        rm -rf "$CHROOTDIR/local"
+        rmdir "$CHROOTDIR/local"
         if [[ $STATUS != 0 ]]; then
             echo "Installing local packages failed, aborting"
             exit 1
@@ -1234,7 +1234,7 @@ build_pkg() {
     fi
 
     # Build the actual package
-    msg "Importing $PACKAGE build directory to rootfs..."
+    msg "Importing '$PACKAGE' build directory to rootfs..."
     $NSPAWN $CHROOTDIR mkdir -p build
     mount --bind "$PACKAGE" "$CHROOTDIR/build"
 
@@ -1249,6 +1249,8 @@ build_pkg() {
 }
 
 export_and_clean() {
+    local ABORT='false'
+
     if ls $CHROOTDIR/build/*.pkg.tar.* > /dev/null 2>&1; then
         # Pull package out of the rootfs
         msg "Building package succeeded..."
@@ -1256,17 +1258,19 @@ export_and_clean() {
         cp -a $CHROOTDIR/build/*.pkg.tar.* $PKGDIR/$ARCH
         chown -R $SUDO_USER $PKGDIR
         msg "Package saved as $PACKAGE in $PKGDIR/$ARCH..."
-        umount $CHROOTDIR/build
-
-        # Clean up the rootfs
-        info "Cleaning build files from rootfs..."
-        rm -rf $CHROOTDIR/build
     else
         # Build failed
-        msg "Package $PACKAGE failed to build, aborting"
-        umount $CHROOTDIR/build
+        ABORT='true'
         prune_cache
-        rm -rf $CHROOTDIR/build
+    fi
+
+    # Clean up the rootfs
+    info "Removing build files from rootfs..."
+    umount $CHROOTDIR/build
+    rmdir $CHROOTDIR/build
+
+    if [[ "$ABORT" = 'true' ]]; then
+        msg "Package $PACKAGE failed to build, aborting"
         exit 1
     fi
 }
@@ -1302,25 +1306,30 @@ check_local_pkgs() {
         echo "Directory ${ADD_PACKAGES} not a valid path, aborting"
         exit 1
     fi
+
+    # Check for packages
     if ! ls ${ADD_PACKAGES}/*.pkg.tar.* > /dev/null 2>&1; then
         echo "Directory ${ADD_PACKAGES} contains no packages, aborting"
         exit 1
     fi
 
+    # Save the absolute path for later
+    ADD_PACKAGES=$(realpath ${ADD_PACKAGES})
+
     # Go through all package files in the directory
     local PACKAGE
     for PACKAGE in ${ADD_PACKAGES}/*.pkg.tar.*; do
-        # Make sure it's a valid tar archive
+        # Check is it a valid tar archive
         tar tf "${PACKAGE}" > /dev/null 2>&1
         if [[ $? != 0 ]]; then
-            echo "Local package ${PACKAGE} not a valid tar archive"
+            echo "Local package $(basename ${PACKAGE}) not a valid tar archive"
             exit 1
         fi
 
         # Check does the archive contain .BUILDINFO
-        tar xfp "$(realpath ${PACKAGE})" -C /tmp .BUILDINFO > /dev/null 2>&1
+        tar xfp "${PACKAGE}" -C /tmp .BUILDINFO > /dev/null 2>&1
         if [[ $? != 0 || ! -f /tmp/.BUILDINFO ]]; then
-            echo "Local package ${PACKAGE} invalid, no .BUILDINFO found"
+            echo "Local package $(basename ${PACKAGE}) invalid, no .BUILDINFO found"
             exit 1
         fi
 
@@ -1329,9 +1338,9 @@ check_local_pkgs() {
         rm -f /tmp/.BUILDINFO
 
         if [[ ${PACKAGE_ARCH} == *"aarch64"* || ${PACKAGE_ARCH} == *"any"* ]]; then
-            echo "Local package ${PACKAGE} verified and will be installed"
+            echo "Local package $(basename ${PACKAGE}) verified and will be installed"
         else
-            echo "Local package ${PACKAGE} not compatible with aarch64"
+            echo "Local package $(basename ${PACKAGE}) not compatible with aarch64"
             exit 1
         fi
     done

@@ -64,8 +64,8 @@ while getopts "${opt}" arg; do
       HOSTNAME="${OPTARG}"
      ;;
     p)
-     FILESYSTEM="${OPTARG}"
-     ;;
+      FILESYSTEM="${OPTARG}"
+      ;;
     \?)
       echo "Option -${OPTARG} is not valid, aborting"
       exit 1
@@ -104,8 +104,10 @@ timer_start=$(get_timer)
 
 # Package lists
 PKG_DEVICE=$(grep "^[^#;]" $PROFILES/arm-profiles/devices/$DEVICE | awk '{print $1}')
-PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/$EDITION | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' )
-cat $PROFILES/arm-profiles/services/$EDITION | sed -e '/^#/d' -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' > $SERVICES_LIST
+PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/$EDITION | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//')
+cat $PROFILES/arm-profiles/services/$EDITION \
+    | sed -e '/^#/d' -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' \
+    > $SERVICES_LIST
 
 # Create the rootfs used for the image
 create_rootfs_img | tee --append "$LOG"
