@@ -1318,15 +1318,15 @@ check_local_pkgs() {
         fi
 
         # Check does the archive contain .BUILDINFO
-        tar xfp "${PACKAGE}" .BUILDINFO > /dev/null 2>&1
-        if [[ $? != 0 || ! -f .BUILDINFO ]]; then
+        tar xfp "$(realpath ${PACKAGE})" -C /tmp .BUILDINFO > /dev/null 2>&1
+        if [[ $? != 0 || ! -f /tmp/.BUILDINFO ]]; then
             echo "Local package ${PACKAGE} invalid, no .BUILDINFO found"
             exit 1
         fi
 
         # Check the architecture and clean up
-        local PACKAGE_ARCH=$(grep 'pkgarch' .BUILDINFO | head -n 1)
-        rm -f .BUILDINFO
+        local PACKAGE_ARCH=$(grep 'pkgarch' /tmp/.BUILDINFO | head -n 1)
+        rm -f /tmp/.BUILDINFO
 
         if [[ ${PACKAGE_ARCH} == *"aarch64"* || ${PACKAGE_ARCH} == *"any"* ]]; then
             echo "Local package ${PACKAGE} verified and will be installed"
