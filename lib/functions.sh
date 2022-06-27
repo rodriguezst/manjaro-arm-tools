@@ -366,9 +366,10 @@ create_rootfs_img() {
 
     if [[ ! -z "${ADD_PACKAGES}" ]]; then
         local STATUS
+        msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
-        mount -o bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
-        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U "local/*.pkg.tar.*" --noconfirm || abort
+        mount -o bind "$(realpath $ADD_PACKAGES)" "$ROOTFS_IMG/rootfs_$ARCH/local"
+        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U local/*.pkg.tar.* --noconfirm || abort
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rm -rf "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -1219,9 +1220,10 @@ build_pkg() {
     # Install local packages to rootfs before building
     if [[ ! -z "${ADD_PACKAGES}" ]]; then
         local STATUS
+        msg "Importing $ADD_PACKAGES local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
-        mount -o bind "$ADD_PACKAGES" "$CHROOTDIR/local"
-        $NSPAWN $CHROOTDIR pacman -U "local/*.pkg.tar.*" --noconfirm
+        mount -o bind "$(realpath $ADD_PACKAGES)" "$CHROOTDIR/local"
+        $NSPAWN $CHROOTDIR pacman -U local/*.pkg.tar.* --noconfirm
         STATUS=$?
         umount "$CHROOTDIR/local"
         rm -rf "$CHROOTDIR/local"
