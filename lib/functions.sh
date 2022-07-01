@@ -253,12 +253,12 @@ create_rootfs_pkg() {
     $NSPAWN $CHROOTDIR update-ca-trust
 
     if [[ ! -z ${CUSTOM_REPO} ]]; then
-        info "Adding repo [$CUSTOM_REPO] to rootfs"
+        info "Adding repository $CUSTOM_REPO to rootfs..."
 
         if [[ "$CUSTOM_REPO" =~ ^https?://.*db ]]; then
-            CUSTOM_REPO_NAME="${CUSTOM_REPO##*/}" # remove everyting before last slash
-            CUSTOM_REPO_NAME="${CUSTOM_REPO_NAME%.*}" # remove everything after last dot
-            CUSTOM_REPO_URL="${CUSTOM_REPO%/*}" # remove everything after last slash
+            CUSTOM_REPO_NAME="${CUSTOM_REPO##*/}"      # Remove everyting before the last slash
+            CUSTOM_REPO_NAME="${CUSTOM_REPO_NAME%.*}"  # Remove everything after the last dot
+            CUSTOM_REPO_URL="${CUSTOM_REPO%/*}"        # Remove everything after the last slash
             sed -i "s/^\[core\]/\[$CUSTOM_REPO_NAME\]\nSigLevel = Optional TrustAll\nServer = ${CUSTOM_REPO_URL//\//\\/}\n\n\[core\]/" \
                 $CHROOTDIR/etc/pacman.conf
         else
@@ -288,7 +288,7 @@ create_rootfs_img() {
         exit 1
     fi
 
-    msg "Creating $EDITION image for $DEVICE..."
+    msg "Creating $EDITION rootfs image for $DEVICE..."
 
     # Remove old rootfs if it exists
     if [ -d "$ROOTFS_IMG/rootfs_$ARCH" ]; then
@@ -395,10 +395,10 @@ create_rootfs_img() {
     local SERVICE
     while read SERVICE; do
         if [ -e $ROOTFS_IMG/rootfs_$ARCH/usr/lib/systemd/system/$SERVICE ]; then
-            echo "Enabling $SERVICE..."
+            echo "Enabling service $SERVICE..."
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH systemctl enable $SERVICE > /dev/null 2>&1
         else
-            echo "$SERVICE not found in rootfs, skipping"
+            echo "Service $SERVICE not found in rootfs, skipping"
         fi
     done < $SERVICES_LIST
 
@@ -595,8 +595,8 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
                 mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d /boot/boot.txt /boot/boot.scr
         fi
 
-        echo "LABEL=ROOT_MNJRO / btrfs  subvol=@,compress=zstd,defaults,noatime  0  0" >> $ROOTFS_IMG/rootfs_$ARCH/etc/fstab
-        echo "LABEL=ROOT_MNJRO /home btrfs  subvol=@home,compress=zstd,defaults,noatime  0  0" >> $ROOTFS_IMG/rootfs_$ARCH/etc/fstab
+        echo "LABEL=ROOT_MNJRO    /        btrfs    subvol=@,compress=zstd,defaults,noatime        0  0" >> $ROOTFS_IMG/rootfs_$ARCH/etc/fstab
+        echo "LABEL=ROOT_MNJRO    /home    btrfs    subvol=@home,compress=zstd,defaults,noatime    0  0" >> $ROOTFS_IMG/rootfs_$ARCH/etc/fstab
         sed -i '/^MODULES/{s/)/ btrfs)/}' $ROOTFS_IMG/rootfs_$ARCH/etc/mkinitcpio.conf
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkinitcpio -P > /dev/null 2>&1
     fi
@@ -632,12 +632,12 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
     
     info "Removing unwanted files from rootfs..."
     prune_cache
-    rm $ROOTFS_IMG/rootfs_$ARCH/usr/bin/qemu-aarch64-static
+    rm -f $ROOTFS_IMG/rootfs_$ARCH/usr/bin/qemu-aarch64-static
     rm -f $ROOTFS_IMG/rootfs_$ARCH/var/log/* > /dev/null 2>&1
     rm -rf $ROOTFS_IMG/rootfs_$ARCH/var/log/journal/*
-    rm -rf $ROOTFS_IMG/rootfs_$ARCH/etc/*.pacnew
-    rm -rf $ROOTFS_IMG/rootfs_$ARCH/usr/lib/systemd/system/systemd-firstboot.service
-    rm -rf $ROOTFS_IMG/rootfs_$ARCH/etc/machine-id
+    rm -f $ROOTFS_IMG/rootfs_$ARCH/etc/*.pacnew
+    rm -f $ROOTFS_IMG/rootfs_$ARCH/usr/lib/systemd/system/systemd-firstboot.service
+    rm -f $ROOTFS_IMG/rootfs_$ARCH/etc/machine-id
     rm -rf $ROOTFS_IMG/rootfs_$ARCH/etc/pacman.d/gnupg
 
     msg "$DEVICE $EDITION rootfs complete"
@@ -715,11 +715,11 @@ create_img_halium() {
     info "Creating image..."
 
     ARCH='aarch64'
-    SIZE=$(du -s --block-size=MB $CHROOTDIR | awk '{print $1}' | sed -e 's/MB//g')
+    SIZE=$(du -s --block-size=MB $CHROOTDIR | awk '{ print $1 }' | sed -e 's/MB//g')
     EXTRA_SIZE=300
     REAL_SIZE=`echo "$(($SIZE+$EXTRA_SIZE))"`
 
-    # Make blank .img to be used and create the filsystem on it
+    # Make blank .img to be used and create the filesystem on it
     dd if=/dev/zero of=$IMGDIR/$IMGNAME.img bs=1M count=$REAL_SIZE > /dev/null 2>&1
     mkfs.ext4 $IMGDIR/$IMGNAME.img -L ROOT_MNJRO > /dev/null 2>&1
 
@@ -735,11 +735,11 @@ create_img_halium() {
 }
 
 create_img() {
-    msg "Finishing image for $DEVICE $EDITION edition..."
-    info "Creating partitions..."
+    msg "Creating $EDITION image for $DEVICE..."
+    info "Creating $FILESYSTEM partitions..."
 
     ARCH='aarch64'
-    SIZE=$(du -s --block-size=MB $CHROOTDIR | awk '{print $1}' | sed -e 's/MB//g')
+    SIZE=$(du -s --block-size=MB $CHROOTDIR | awk '{ print $1 }' | sed -e 's/MB//g')
     EXTRA_SIZE=800
     REAL_SIZE=`echo "$(($SIZE+$EXTRA_SIZE))"`
     
@@ -756,15 +756,15 @@ create_img() {
     # Mount the image to the loop device
     losetup -P $LDEV $IMGDIR/$IMGNAME.img > /dev/null 2>&1
 
+    # Clear the first 32 MB
+    dd if=/dev/zero of=${LDEV} bs=1M count=32 conv=fsync,notrunc > /dev/null 2>&1
+
     case "$FILESYSTEM" in
         btrfs)
-            # Create partitions
-            # Clear the first 32 MB
-            dd if=/dev/zero of=${LDEV} bs=1M count=32 > /dev/null 2>&1
-
-            # Partition with boot and root
+            # Create the boot and root partitions
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
+                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x| \
+                rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos > /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 32M 512M > /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
@@ -775,13 +775,11 @@ create_img() {
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO > /dev/null 2>&1
                     mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p2" > /dev/null 2>&1
     
-                    # Copy the rootfs contents over to the filesystem
-                    info "Creating subvolumes..."
+                    # Create and mount the subvolumes
+                    info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
                     mkdir -p $TMPDIR/boot
                     mount ${LDEV}p1 $TMPDIR/boot
-
-                    # Create the subvolumes
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -789,6 +787,8 @@ create_img() {
                     mount -o compress=zstd,subvol=@ "${LDEV}p2" $TMPDIR/root
                     mkdir -p $TMPDIR/root/home
                     mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
+
+                    # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
@@ -805,13 +805,11 @@ create_img() {
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO > /dev/null 2>&1
                     mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p2" > /dev/null 2>&1
     
-                    # Copy the rootfs contents over to the filesystem
-                    info "Creating subvolumes..."
+                    # Create and mount the subvolumes
+                    info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
                     mkdir -p $TMPDIR/boot
                     mount ${LDEV}p1 $TMPDIR/boot
-
-                    # Create the subvolumes
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -819,6 +817,8 @@ create_img() {
                     mount -o compress=zstd,subvol=@ "${LDEV}p2" $TMPDIR/root
                     mkdir -p $TMPDIR/root/home
                     mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
+
+                    # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
@@ -836,13 +836,11 @@ create_img() {
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO > /dev/null 2>&1
                     mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p2" > /dev/null 2>&1
                 
-                    # Copy the rootfs contents over to the filsystem
-                    info "Creating subvolumes..."
+                    # Create and mount the subvolumes
+                    info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
                     mkdir -p $TMPDIR/boot
                     mount ${LDEV}p1 $TMPDIR/boot
-
-                    # Create the subvolumes
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -850,6 +848,8 @@ create_img() {
                     mount -o compress=zstd,subvol=@ "${LDEV}p2" $TMPDIR/root
                     mkdir -p $TMPDIR/root/home
                     mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
+
+                    # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
@@ -868,13 +868,11 @@ create_img() {
                     mkfs.vfat "${LDEV}p2" -n BOOT_MNJRO > /dev/null 2>&1
                     mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p3" > /dev/null 2>&1
                 
-                    # Copy the rootfs contents over to the filesystem
-                    info "Creating subvolumes..."
+                    # Create and mount the subvolumes
+                    info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
                     mkdir -p $TMPDIR/boot
                     mount ${LDEV}p2 $TMPDIR/boot
-
-                    # Create the subvolumes
                     mount -o compress=zstd "${LDEV}p3" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -882,6 +880,8 @@ create_img() {
                     mount -o compress=zstd,subvol=@ "${LDEV}p3" $TMPDIR/root
                     mkdir -p $TMPDIR/root/home
                     mount -o compress=zstd,subvol=@home "${LDEV}p3" $TMPDIR/root/home
+
+                    # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
@@ -898,13 +898,11 @@ create_img() {
                     mkfs.vfat "${LDEV}p1" -n BOOT_MNJRO > /dev/null 2>&1
                     mkfs.btrfs -m single -L ROOT_MNJRO "${LDEV}p2" > /dev/null 2>&1
     
-                    # Copy the rootfs contents over to the filesystem
-                    info "Creating subvolumes..."
+                    # Create and mount the subvolumes
+                    info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
                     mkdir -p $TMPDIR/boot
                     mount ${LDEV}p1 $TMPDIR/boot
-
-                    # Create the subvolumes
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -912,6 +910,8 @@ create_img() {
                     mount -o compress=zstd,subvol=@ "${LDEV}p2" $TMPDIR/root
                     mkdir -p $TMPDIR/root/home
                     mount -o compress=zstd,subvol=@home "${LDEV}p2" $TMPDIR/root/home
+
+                    # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
                     mv $TMPDIR/root/boot/* $TMPDIR/boot
@@ -920,12 +920,10 @@ create_img() {
             ;;
 
         *)
-            # Create the partitions and clear the first 32 MB
-            dd if=/dev/zero of=${LDEV} bs=1M count=32 > /dev/null 2>&1
-
-            # Partition with boot and root
+            # Create the boot and root partitions
             case "$DEVICE" in
-                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x|rpi3|rpi4|rpi4-cutiepi|pinephone)
+                oc2|on2|on2-plus|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x| \
+                rpi3|rpi4|rpi4-cutiepi|pinephone)
                     parted -s $LDEV mklabel msdos > /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 32M 512M > /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
@@ -1032,9 +1030,9 @@ create_img() {
             ;;
     esac
         
-    # Flash the boot loader
+    # Write the boot loader images
     if [[ "$DEVICE" != "generic" ]] && [[ "$DEVICE" != "generic-efi" ]]; then
-        info "Flashing bootloader..."
+        info "Writing the boot loader images..."
         case "$DEVICE" in
             # AMLogic U-Boots
             oc2)
@@ -1062,7 +1060,8 @@ create_img() {
                 ;;
 
             # Rockchip RK33XX and RK35XX mainline U-Boots
-            pbpro|rockpro64|rockpi4b|rockpi4c|nanopc-t4|rock64|roc-cc|stationp1|pinephonepro|clockworkpi-a06|quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-p2|om1|opi4-lts)
+            pbpro|rockpro64|rockpi4b|rockpi4c|nanopc-t4|rock64|roc-cc|stationp1|pinephonepro|clockworkpi-a06| \
+            quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-p2|om1|opi4-lts)
                 dd if=$TMPDIR/boot/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync > /dev/null 2>&1
                 dd if=$TMPDIR/boot/u-boot.itb of=${LDEV} seek=16384 conv=notrunc,fsync > /dev/null 2>&1
                 ;;
@@ -1094,70 +1093,75 @@ create_img() {
         esac
     fi
     
-    info "Writing PARTUUIDs..."
+    # Fetch the PARTUUIDs
     if [[ "$DEVICE" = "quartz64-bsp" ]]; then
-        BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{print $2}')
-        ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p3" | awk '{print $2}')
+        BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{ print $2 }')
+        ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p3" | awk '{ print $2 }')
     else
-        BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p1" | awk '{print $2}')
-        ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{print $2}')
+        BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p1" | awk '{ print $2 }')
+        ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{ print $2 }')
     fi
 
     echo "Boot PARTUUID is $BOOT_PART..."
+    echo "Root PARTUUID is $ROOT_PART..."
+
     #if [[ "$DEVICE" = "generic-efi" ]]; then
     #  sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
     #fi
 
+    # Adjust the fstab to use the boot PARTUUID
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
-    echo "Root PARTUUID is $ROOT_PART..."
 
+    # Adjust the boot loader configuration to use the root PARTUUID
     if [ -f $TMPDIR/boot/extlinux/extlinux.conf ]; then
         sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/extlinux/extlinux.conf
-        elif [ -f $TMPDIR/boot/efi/extlinux/extlinux.conf ]; then
-            sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/efi/extlinux/extlinux.conf
-        elif [ -f $TMPDIR/boot/boot.ini ]; then
-            sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/boot.ini
-        elif [ -f $TMPDIR/boot/uEnv.ini ]; then
-            sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/uEnv.ini
-        #elif [ -f $TMPDIR/boot/cmdline.txt ]; then
-        #    sed -i "s/PARTUUID=/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/cmdline.txt
-        #elif [ -f $TMPDIR/boot/boot.txt ]; then
-        #   sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/boot.txt
-        #   cd $TMPDIR/boot
-        #   ./mkscr
-        #   cd $HOME
+    elif [ -f $TMPDIR/boot/efi/extlinux/extlinux.conf ]; then
+        sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/efi/extlinux/extlinux.conf
+    elif [ -f $TMPDIR/boot/boot.ini ]; then
+        sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/boot.ini
+    elif [ -f $TMPDIR/boot/uEnv.ini ]; then
+        sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/uEnv.ini
+    #elif [ -f $TMPDIR/boot/cmdline.txt ]; then
+    #   sed -i "s/PARTUUID=/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/cmdline.txt
+    #elif [ -f $TMPDIR/boot/boot.txt ]; then
+    #   sed -i "s/LABEL=ROOT_MNJRO/PARTUUID=$ROOT_PART/g" $TMPDIR/boot/boot.txt
+    #   cd $TMPDIR/boot
+    #   ./mkscr
+    #   cd $HOME
     fi
     
     if [[ "$DEVICE" = "rpi4" ]] && [[ "$FILESYSTEM" = "btrfs" ]]; then
-        echo "===> Installing default btrfs RPi cmdline.txt /boot..."
+        echo "===> Installing default btrfs /boot/cmdline.txt file..."
         echo "rootflags=subvol=@ root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0" > $TMPDIR/boot/cmdline.txt
     elif [[ "$DEVICE" = "rpi4" ]]; then
-        echo "===> Installing default ext4 RPi cmdline.txt /boot..."
+        echo "===> Installing default ext4 /boot/cmdline.txt file..."
         echo "root=PARTUUID=$ROOT_PART rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0" >  $TMPDIR/boot/cmdline.txt
     elif [[ "$DEVICE" = "rpi4-cutiepi" ]]; then
-        echo "===> Installing default ext4 RPi cmdline.txt /boot..."
+        echo "===> Installing default ext4 /boot/cmdline.txt file..."
         echo "console=tty1 root=PARTUUID=$ROOT_PART rootfstype=ext4 fsck.repair=yes rootwait plymouth.ignore-serial-consoles video=HDMI-A-2:D video=DSI-1:800x1280@60" > $TMPDIR/boot/cmdline.txt
     fi
 
     if [[ "$DEVICE" = "rpi4" ]]; then
-        echo "===> Installing default config.txt file to /boot/..."
-        echo "# See /boot/overlays/README for all available options" > $TMPDIR/boot/config.txt
-        echo "" >> $TMPDIR/boot/config.txt
-        echo "#gpu_mem=64" >> $TMPDIR/boot/config.txt
-        echo "initramfs initramfs-linux.img followkernel" >> $TMPDIR/boot/config.txt
-        echo "kernel=kernel8.img" >> $TMPDIR/boot/config.txt
-        echo "arm_64bit=1" >> $TMPDIR/boot/config.txt
-        echo "disable_overscan=1" >> $TMPDIR/boot/config.txt
-        echo "dtparam=krnbt=on" >> $TMPDIR/boot/config.txt
-        echo "" >> $TMPDIR/boot/config.txt
-        echo "#enable sound" >> $TMPDIR/boot/config.txt
-        echo "dtparam=audio=on" >> $TMPDIR/boot/config.txt
-        echo "#hdmi_drive=2" >> $TMPDIR/boot/config.txt
-        echo "" >> $TMPDIR/boot/config.txt
-        echo "#enable vc4" >> $TMPDIR/boot/config.txt
-        echo "dtoverlay=vc4-kms-v3d" >> $TMPDIR/boot/config.txt
-        echo "max_framebuffers=2"  >> $TMPDIR/boot/config.txt
-        echo "disable_splash=1" >> $TMPDIR/boot/config.txt
+        echo "===> Installing default /boot/config.txt file..."
+        echo "#
+# See /boot/overlays/README for all available options
+#
+
+#gpu_mem=64
+initramfs initramfs-linux.img followkernel
+kernel=kernel8.img
+arm_64bit=1
+disable_overscan=1
+dtparam=krnbt=on
+
+#enable sound
+dtparam=audio=on
+#hdmi_drive=2
+
+#enable vc4
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+disable_splash=1" > $TMPDIR/boot/config.txt
     fi
     
     if [[ "$FILESYSTEM" = "btrfs" ]]; then
@@ -1166,8 +1170,8 @@ create_img() {
         echo "PARTUUID=$ROOT_PART   /   $FILESYSTEM     defaults    0   1" >> $TMPDIR/root/etc/fstab
     fi
     
-    ## TODO
-    ## Figure out how to generate a working .efi file in our rootfs for the efi devices
+    # TODO
+    # Figure out how to generate a working .efi file in our rootfs for the EFI devices
     
     # Clean up
     info "Cleaning up image..."
@@ -1176,13 +1180,13 @@ create_img() {
     fi
     umount $TMPDIR/root
     #if [[ "$DEVICE" = "generic-efi" ]]; then
-    #    umount $TMPDIR/boot/efi
+    #   umount $TMPDIR/boot/efi
     #else
         umount $TMPDIR/boot
     #fi
 
     losetup -d $LDEV > /dev/null 2>&1
-    rm -r $TMPDIR/root $TMPDIR/boot
+    rmdir $TMPDIR/root $TMPDIR/boot
     partprobe $LDEV > /dev/null 2>&1
     chmod 0666 $IMGDIR/$IMGNAME.img
 }
