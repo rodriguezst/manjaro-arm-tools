@@ -312,6 +312,10 @@ create_rootfs_img() {
     info "Extracting $ARCH rootfs..."
     bsdtar -xpf $ROOTFS_IMG/Manjaro-ARM-$ARCH-latest.tar.gz -C $ROOTFS_IMG/rootfs_$ARCH
 
+    # Create a "marker" that tells the packages that they're installed as part of building
+    # an image, which is currently used by the "generic-post-install" package only
+    touch $ROOTFS_IMG/rootfs_$ARCH/MANJARO-ARM-IMAGE-BUILD
+
     info "Setting up keyrings..."
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --init > /dev/null || abort
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --populate archlinuxarm manjaro manjaro-arm > /dev/null || abort
@@ -633,6 +637,7 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
     info "Removing unwanted files from rootfs..."
     prune_cache
     rm -f $ROOTFS_IMG/rootfs_$ARCH/usr/bin/qemu-aarch64-static
+    rm -f $ROOTFS_IMG/rootfs_$ARCH/MANJARO-ARM-IMAGE-BUILD
     rm -f $ROOTFS_IMG/rootfs_$ARCH/var/log/* > /dev/null 2>&1
     rm -rf $ROOTFS_IMG/rootfs_$ARCH/var/log/journal/*
     rm -f $ROOTFS_IMG/rootfs_$ARCH/etc/*.pacnew
