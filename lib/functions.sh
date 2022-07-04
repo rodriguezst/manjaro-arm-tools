@@ -378,7 +378,7 @@ create_rootfs_img() {
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
-        if [[ $STATUS != 0 ]]; then
+        if [[ $STATUS != 0 || $? != 0 ]]; then
             echo "Installing local packages failed, aborting"
             exit 1
         fi
@@ -1192,6 +1192,10 @@ disable_splash=1" > $TMPDIR/boot/config.txt
 
     losetup -d $LDEV > /dev/null 2>&1
     rmdir $TMPDIR/root $TMPDIR/boot
+    if [[ $? != 0 ]]; then
+        echo "Cleaning up image failed, aborting"
+        exit 1
+    fi
     partprobe $LDEV > /dev/null 2>&1
     chmod 0666 $IMGDIR/$IMGNAME.img
 }
@@ -1237,7 +1241,7 @@ build_pkg() {
         STATUS=$?
         umount "$CHROOTDIR/local"
         rmdir "$CHROOTDIR/local"
-        if [[ $STATUS != 0 ]]; then
+        if [[ $STATUS != 0 || $? != 0 ]]; then
             echo "Installing local packages failed, aborting"
             exit 1
         fi
@@ -1278,6 +1282,10 @@ export_and_clean() {
     info "Removing build files from rootfs..."
     umount $CHROOTDIR/build
     rmdir $CHROOTDIR/build
+    if [[ $? != 0 ]]; then
+        echo "Removing build files failed, aborting"
+        exit 1
+    fi
 
     if [[ "$ABORT" = 'true' ]]; then
         msg "Package $PACKAGE failed to build, aborting"
