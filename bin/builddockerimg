@@ -16,20 +16,20 @@ check_root
 check_running
 
 create_rootfs () {
-    msg "Creating rootfs..."
-    
     # Remove old rootfs if it exists
     if [ -d $BUILDDIR/$ARCH ]; then
-    echo "Removing old rootfs..."
-    rm -rf $BUILDDIR/$ARCH
+        echo "Removing old rootfs..."
+        rm -rf $BUILDDIR/$ARCH
     fi
 
-    # Initialize the rootfs filesystem
-    mkdir -p $BUILDDIR/$ARCH
+    # Perform basic rootfs initialization
+    msg "Creating rootfs..."
+    mkdir -p $BUILDDIR/$ARCH/etc
+    ln -s ../usr/lib/os-release $BUILDDIR/$ARCH/etc/os-release
     $LIBDIR/pacstrap -G -c -C $LIBDIR/pacman.conf.$ARCH $BUILDDIR/$ARCH base-devel
 
     # Enable cross-architecture chrooting
-    cp /usr/bin/qemu-aarch64-static $BUILDDIR/$ARCH/usr/bin
+    cp -a /usr/bin/qemu-aarch64-static $BUILDDIR/$ARCH/usr/bin
     
     # Fix SSL in the rootfs
     rm -f $BUILDDIR/$ARCH/etc/ssl/certs/ca-certificates.crt
@@ -45,12 +45,15 @@ create_rootfs () {
 
 compress_docker () {
     msg "Making Docker image..."
-    # make sure docker service is running
+
+    # Make sure that Docker service is running
     systemctl start docker
-    # create the docker image itself
+
+    # Create the Docker image itself
     tar --numeric-owner --xattrs --acls -C $BUILDDIR/$ARCH -c . | docker import - $DOCKER_IMAGE_NAME > /dev/null 2>&1
     docker image tag $DOCKER_IMAGE_NAME:latest manjaroarm/$DOCKER_IMAGE_NAME:latest
-    # upload the docker image to DockerHub and remove it from local docker
+
+    # Upload the Docker image to DockerHub and remove it locally
     docker push manjaroarm/$DOCKER_IMAGE_NAME:latest
     rm -rf $BUILDDIR/$ARCH
     docker image rm $DOCKER_IMAGE_NAME
@@ -80,10 +83,8 @@ while getopts "${opt}" arg; do
 done
 
 # Log file
-if [ ! -d /var/log/manjaro-arm-tools ]; then
-    mkdir -p /var/log/manjaro-arm-tools
-fi
-LOG=/var/log/manjaro-arm-tools/builddockerimg-$(date +%Y-%m-%d-%H.%M).log
+mkdir -p /var/log/manjaro-arm-tools
+LOG=/var/log/manjaro-arm-tools/builddockerimg-$(date +%Y-%m-%d-%H:%M).log
 
 # Commands
 create_rootfs | tee --append "$LOG"
