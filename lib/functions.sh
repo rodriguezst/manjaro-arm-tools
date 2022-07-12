@@ -272,7 +272,7 @@ create_rootfs_pkg() {
     sed -i s/'#MAKEFLAGS="-j2"'/'MAKEFLAGS="-j$(nproc)"'/ $CHROOTDIR/etc/makepkg.conf
     sed -i s/'COMPRESSXZ=(xz -c -z -)'/'COMPRESSXZ=(xz -c -z - --threads=0)'/ $CHROOTDIR/etc/makepkg.conf
 
-    $NSPAWN $CHROOTDIR pacman -Syy
+    $NSPAWN $CHROOTDIR pacman -Syy --noprogressbar
 }
 
 create_rootfs_img() {
@@ -351,13 +351,13 @@ create_rootfs_img() {
         cubocore|gnome-mobile|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm || abort
+                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
             ;;
 
         minimal|server)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm || abort
+                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
             ;;
 
         *)
@@ -365,11 +365,11 @@ create_rootfs_img() {
             if [[ "$DEVICE" = "clockworkpi-a06" ]]; then
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm || abort
+                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
             else
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs calamares-arm-oem manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm || abort
+                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
             fi
             ;;
     esac
@@ -380,7 +380,7 @@ create_rootfs_img() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
         mount --bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
-        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U $ADD_PACKAGES_LIST --noconfirm
+        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -687,7 +687,8 @@ create_emmc_install() {
     msg "Installing packages for eMMC installer edition of $EDITION on $DEVICE..."
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
-    $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher $PKG_EDITION $PKG_DEVICE --noconfirm
+    $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher \
+                                    $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar
 
     # Enable services
     info "Enabling services..."
@@ -1243,7 +1244,7 @@ build_pkg() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
         mount --bind "$ADD_PACKAGES" "$CHROOTDIR/local"
-        $NSPAWN $CHROOTDIR pacman -U $ADD_PACKAGES_LIST --noconfirm
+        $NSPAWN $CHROOTDIR pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar
         STATUS=$?
         umount "$CHROOTDIR/local"
         rmdir "$CHROOTDIR/local"
@@ -1260,11 +1261,11 @@ build_pkg() {
 
     msg "Building $PACKAGE..."
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
-    $NSPAWN $CHROOTDIR pacman -Syu --noconfirm > /dev/null 2>&1
+    $NSPAWN $CHROOTDIR pacman -Syu --noconfirm --noprogressbar
     if [[ $INSTALL_NEW = true ]]; then
-        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asci --noconfirm
+        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asci --noconfirm --noprogressbar
     else
-        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asc --noconfirm
+        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asc --noconfirm --noprogressbar
     fi
 }
 
