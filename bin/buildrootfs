@@ -72,5 +72,7 @@ mkdir -p /var/log/manjaro-arm-tools
 LOGFILE="/var/log/manjaro-arm-tools/buildrootfs-$(date +%Y-%m-%d-%H:%M).log"
 
 # Commands
-create_rootfs | tee --append "$LOGFILE"
-compress_rootfs | tee --append "$LOGFILE"
+create_rootfs 2>&1 | tee --append "$LOGFILE"
+compress_rootfs 2>&1 | tee --append "$LOGFILE"
+
+# EOF

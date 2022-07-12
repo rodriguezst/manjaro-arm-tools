@@ -87,5 +87,7 @@ mkdir -p /var/log/manjaro-arm-tools
 LOGFILE="/var/log/manjaro-arm-tools/builddockerimg-$(date +%Y-%m-%d-%H:%M).log"
 
 # Commands
-create_rootfs | tee --append "$LOGFILE"
-compress_docker | tee --append "$LOGFILE"
+create_rootfs 2>&1 | tee --append "$LOGFILE"
+compress_docker 2>&1 | tee --append "$LOGFILE"
+
+# EOF

@@ -25,6 +25,8 @@ HOSTNAME='manjaro-arm'
 PASSWORD='manjaro'
 CARCH=$(uname -m)
 COLORS='false'
+PACMAN_COLORS="--color=never"
+MAKEPKG_COLORS="--nocolor"
 FILESYSTEM='ext4'
 SERVICES_LIST='/tmp/services_list'
 
@@ -109,21 +111,24 @@ enable_colors() {
     BOLD="\e[1;1m"
     GREEN="${BOLD}\e[1;32m"
     BLUE="${BOLD}\e[1;34m"
+
+    PACMAN_COLORS="--color=always"
+    MAKEPKG_COLORS=""
 }
 
 msg() {
     local mesg=$1; shift
-    printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
- }
+    printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
+}
  
 info() {
     local mesg=$1; shift
-    printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
- }
+    printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
+}
 
 error() {
     local mesg=$1; shift
-    printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+    printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
 }
 
 cleanup() {
@@ -272,7 +277,7 @@ create_rootfs_pkg() {
     sed -i s/'#MAKEFLAGS="-j2"'/'MAKEFLAGS="-j$(nproc)"'/ $CHROOTDIR/etc/makepkg.conf
     sed -i s/'COMPRESSXZ=(xz -c -z -)'/'COMPRESSXZ=(xz -c -z - --threads=0)'/ $CHROOTDIR/etc/makepkg.conf
 
-    $NSPAWN $CHROOTDIR pacman -Syy --noprogressbar
+    $NSPAWN $CHROOTDIR pacman -Syy --noprogressbar $PACMAN_COLORS
 }
 
 create_rootfs_img() {
@@ -351,13 +356,13 @@ create_rootfs_img() {
         cubocore|gnome-mobile|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
+                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             ;;
 
         minimal|server)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
+                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             ;;
 
         *)
@@ -365,11 +370,11 @@ create_rootfs_img() {
             if [[ "$DEVICE" = "clockworkpi-a06" ]]; then
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
+                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             else
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs calamares-arm-oem manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar || abort
+                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             fi
             ;;
     esac
@@ -380,7 +385,7 @@ create_rootfs_img() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH mkdir -p local
         mount --bind "$ADD_PACKAGES" "$ROOTFS_IMG/rootfs_$ARCH/local"
-        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar
+        $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar $PACMAN_COLORS
         STATUS=$?
         umount "$ROOTFS_IMG/rootfs_$ARCH/local"
         rmdir "$ROOTFS_IMG/rootfs_$ARCH/local"
@@ -418,7 +423,7 @@ create_rootfs_img() {
     # System setup
     info "Setting up system settings..."
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH update-ca-trust
-    echo "$HOSTNAME" | tee --append $ROOTFS_IMG/rootfs_$ARCH/etc/hostname > /dev/null 2>&1
+    echo "$HOSTNAME" > $ROOTFS_IMG/rootfs_$ARCH/etc/hostname
     case "$EDITION" in
         cubocore|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell)
             echo "No OEM setup available for the edition, skipping..."
@@ -629,9 +634,9 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
 
         sed -i "s/arm-$BRANCH/arm-stable/g" $ROOTFS_IMG/rootfs_$ARCH/etc/pacman.d/mirrorlist
         sed -i "s/arm-$BRANCH/arm-stable/g" $ROOTFS_IMG/rootfs_$ARCH/etc/pacman-mirrors.conf
-        echo "$EDITION - $(date +'%y'.'%m'.'%d')" | tee --append $ROOTFS_IMG/rootfs_$ARCH/etc/factory-version > /dev/null 2>&1
+        echo "$EDITION - $(date +'%y'.'%m'.'%d')" >> $ROOTFS_IMG/rootfs_$ARCH/etc/factory-version
     else
-        echo "$DEVICE - $EDITION - $VERSION" | tee --append $ROOTFS_IMG/rootfs_$ARCH/etc/manjaro-arm-version > /dev/null 2>&1
+        echo "$DEVICE - $EDITION - $VERSION" >> $ROOTFS_IMG/rootfs_$ARCH/etc/manjaro-arm-version
     fi
     
     msg "Creating package list $IMGDIR/$IMGNAME-pkgs.txt..."
@@ -688,7 +693,7 @@ create_emmc_install() {
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher \
-                                    $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar
+                                    $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS
 
     # Enable services
     info "Enabling services..."
@@ -696,7 +701,7 @@ create_emmc_install() {
     
     # Set the hostname
     info "Setting up system settings..."
-    echo "$HOSTNAME" | tee --append $ROOTFS_IMG/rootfs_$ARCH/etc/hostname > /dev/null 2>&1
+    echo "$HOSTNAME" > $ROOTFS_IMG/rootfs_$ARCH/etc/hostname
 
     # Anable autologin
     mv $CHROOTDIR/usr/lib/systemd/system/getty\@.service $CHROOTDIR/usr/lib/systemd/system/getty\@.service.bak
@@ -1244,7 +1249,7 @@ build_pkg() {
         msg "Importing '$ADD_PACKAGES' local packages directory to rootfs..."
         $NSPAWN $CHROOTDIR mkdir -p local
         mount --bind "$ADD_PACKAGES" "$CHROOTDIR/local"
-        $NSPAWN $CHROOTDIR pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar
+        $NSPAWN $CHROOTDIR pacman -U $ADD_PACKAGES_LIST --noconfirm --noprogressbar $PACMAN_COLORS
         STATUS=$?
         umount "$CHROOTDIR/local"
         rmdir "$CHROOTDIR/local"
@@ -1261,11 +1266,11 @@ build_pkg() {
 
     msg "Building $PACKAGE..."
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
-    $NSPAWN $CHROOTDIR pacman -Syu --noconfirm --noprogressbar
+    $NSPAWN $CHROOTDIR pacman -Syu --noconfirm --noprogressbar $PACMAN_COLORS
     if [[ $INSTALL_NEW = true ]]; then
-        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asci --noconfirm --noprogressbar
+        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asci --noconfirm --noprogressbar $MAKEPKG_COLORS
     else
-        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asc --noconfirm --noprogressbar
+        $NSPAWN $CHROOTDIR --chdir=/build makepkg -Asc --noconfirm --noprogressbar $MAKEPKG_COLORS
     fi
 }
 
@@ -1375,3 +1380,5 @@ check_local_pkgs() {
     # Save the absolute path for later
     ADD_PACKAGES="$(realpath ${ADD_PACKAGES})"
 }
+
+# EOF

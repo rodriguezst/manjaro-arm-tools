@@ -91,7 +91,7 @@ IMGNAME="Manjaro-ARM-$EDITION-$DEVICE-$VERSION"
 ARCH='aarch64'
 
 if [ ! -d "$PROFILES/arm-profiles" ]; then
-    getarmprofiles | tee --append "$LOGFILE"
+    getarmprofiles 2>&1 | tee --append "$LOGFILE"
 fi
 
 # Make sure only a known branch is used
@@ -108,25 +108,27 @@ cat $PROFILES/arm-profiles/services/$EDITION \
     > $SERVICES_LIST
 
 # Create the rootfs used for the image
-create_rootfs_img | tee --append "$LOGFILE"
+create_rootfs_img 2>&1 | tee --append "$LOGFILE"
 
 case "$DEVICE" in
     halium-9)
-        create_img_halium | tee --append "$LOGFILE"
+        create_img_halium 2>&1 | tee --append "$LOGFILE"
         ;;
     *)
-        create_img | tee --append "$LOGFILE"
+        create_img 2>&1 | tee --append "$LOGFILE"
         ;;
 esac
 if [ $BMAP = true ]; then
-    create_bmap | tee --append "$LOGFILE"
+    create_bmap 2>&1 | tee --append "$LOGFILE"
 fi
 if [[ "$EXTRACTED" = "true" ]]; then
     info "Image not compressed, option -x was passed"
 else
     # Create the compressed file, from the .img file which will get deleted
-    compress | tee --append "$LOGFILE"
+    compress 2>&1 | tee --append "$LOGFILE"
 fi
 
 # Show the timer
-show_elapsed_time "${FUNCNAME}" "${timer_start}" | tee --append "$LOGFILE"
+show_elapsed_time "${FUNCNAME}" "${timer_start}" 2>&1 | tee --append "$LOGFILE"
+
+# EOF
