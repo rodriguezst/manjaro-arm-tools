@@ -233,12 +233,14 @@ create_rootfs_pkg() {
 
     # Perform basic rootfs initialization
     msg "Creating rootfs..."
-    mkdir -p $CHROOTDIR
+    mkdir -p $CHROOTDIR/etc
+    ln -s ../usr/lib/os-release $CHROOTDIR/etc/os-release
     info "Switching branch to $BRANCH..."
+    cp -a $LIBDIR/pacman.conf.$ARCH $LIBDIR/pacman.conf.$ARCH.backup
     sed -i s/"arm-stable"/"arm-$BRANCH"/g $LIBDIR/pacman.conf.$ARCH
     $LIBDIR/pacstrap -G -M -C $LIBDIR/pacman.conf.$ARCH $CHROOTDIR fakeroot-qemu base-devel
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
-    sed -i s/"arm-$BRANCH"/"arm-stable"/g $LIBDIR/pacman.conf.$ARCH
+    mv -f $LIBDIR/pacman.conf.$ARCH.backup $LIBDIR/pacman.conf.$ARCH
 
     if [[ $CARCH != "aarch64" ]]; then
         # Enable cross-architecture chrooting
@@ -315,6 +317,10 @@ create_rootfs_img() {
     # Create a "marker" that tells the packages that they're installed as part of building
     # an image, which is currently used by the "generic-post-install" package only
     touch $ROOTFS_IMG/rootfs_$ARCH/MANJARO-ARM-IMAGE-BUILD
+
+    # Make this symlink available, it's created by systemd on a running system
+    mkdir -p $ROOTFS_IMG/rootfs_$ARCH/etc
+    ln -sf ../usr/lib/os-release $ROOTFS_IMG/rootfs_$ARCH/etc/os-release
 
     info "Setting up keyrings..."
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --init > /dev/null || abort
