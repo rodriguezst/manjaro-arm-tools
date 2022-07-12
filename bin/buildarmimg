@@ -27,7 +27,7 @@ opt=":e:d:v:i:b:nfxhk:mos:p:c"
 while getopts "${opt}" arg; do
   case $arg in
     c)
-      COLORS=false
+      COLORS='true'
       ;;
     e)
       EDITION="${OPTARG}"
@@ -39,10 +39,10 @@ while getopts "${opt}" arg; do
       VERSION="${OPTARG}"
       ;;
     n)
-      KEEPROOTFS=false
+      KEEPROOTFS='false'
       ;;
     x)
-      EXTRACTED=true
+      EXTRACTED='true'
       ;;
     i)
       ADD_PACKAGES="${OPTARG}"
@@ -52,10 +52,10 @@ while getopts "${opt}" arg; do
       BRANCH="${OPTARG}"
       ;;
     f)
-      FACTORY=true
+      FACTORY='true'
       ;;
     m)
-      BMAP=true
+      BMAP='true'
      ;;
     k)
       CUSTOM_REPO="${OPTARG}"
@@ -85,13 +85,13 @@ done
 
 # Log file
 mkdir -p /var/log/manjaro-arm-tools
-LOG="/var/log/manjaro-arm-tools/buildarmimg-$(date +%Y-%m-%d-%H:%M).log"
+LOGFILE="/var/log/manjaro-arm-tools/buildarmimg-$(date +%Y-%m-%d-%H:%M).log"
 
 IMGNAME="Manjaro-ARM-$EDITION-$DEVICE-$VERSION"
 ARCH='aarch64'
 
 if [ ! -d "$PROFILES/arm-profiles" ]; then
-    getarmprofiles | tee --append "$LOG"
+    getarmprofiles | tee --append "$LOGFILE"
 fi
 
 # Make sure only a known branch is used
@@ -108,25 +108,25 @@ cat $PROFILES/arm-profiles/services/$EDITION \
     > $SERVICES_LIST
 
 # Create the rootfs used for the image
-create_rootfs_img | tee --append "$LOG"
+create_rootfs_img | tee --append "$LOGFILE"
 
 case "$DEVICE" in
     halium-9)
-        create_img_halium | tee --append "$LOG"
+        create_img_halium | tee --append "$LOGFILE"
         ;;
     *)
-        create_img | tee --append "$LOG"
+        create_img | tee --append "$LOGFILE"
         ;;
 esac
 if [ $BMAP = true ]; then
-    create_bmap | tee --append "$LOG"
+    create_bmap | tee --append "$LOGFILE"
 fi
 if [[ "$EXTRACTED" = "true" ]]; then
     info "Image not compressed, option -x was passed"
 else
     # Create the compressed file, from the .img file which will get deleted
-    compress | tee --append "$LOG"
+    compress | tee --append "$LOGFILE"
 fi
 
 # Show the timer
-show_elapsed_time "${FUNCNAME}" "${timer_start}" | tee --append "$LOG"
+show_elapsed_time "${FUNCNAME}" "${timer_start}" | tee --append "$LOGFILE"

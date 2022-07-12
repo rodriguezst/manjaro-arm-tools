@@ -24,7 +24,7 @@ USER='manjaro'
 HOSTNAME='manjaro-arm'
 PASSWORD='manjaro'
 CARCH=$(uname -m)
-COLORS='true'
+COLORS='false'
 FILESYSTEM='ext4'
 SERVICES_LIST='/tmp/services_list'
 
@@ -76,7 +76,7 @@ usage_build_img() {
     echo "    -n                 Force downloading of the new root filesystem"
     echo "    -s <hostname>      Custom hostname to be used"
     echo "    -x                 Do not compress the image"
-    echo "    -c                 Disable support for colors"
+    echo "    -c                 Enable support for colored output"
     echo "    -f                 Create image with factory settings"
     echo "    -p <filesystem>    Filesystem for the root partition; default is ext4, options are ext4 and btrfs"
     echo "    -h                 Show this help"
@@ -137,7 +137,7 @@ abort() {
 }
 
 prune_cache(){
-    info "Prune and unmount package cache..."
+    info "Pruning and unmounting package cache..."
     $NSPAWN $CHROOTDIR paccache -r
     umount $PKG_CACHE
 }
@@ -1308,6 +1308,7 @@ clone_profiles() {
 get_profiles() {
     local BRANCH='master'
 
+    echo "Fetching '$BRANCH' branch of ARM profiles..."
     if ls $PROFILES/arm-profiles/* > /dev/null 2>&1; then
         if [[ $(grep branch $PROFILES/arm-profiles/.git/config | cut -d\" -f2) = "$BRANCH" ]]; then
             cd $PROFILES/arm-profiles
