@@ -25,10 +25,17 @@ HOSTNAME='manjaro-arm'
 PASSWORD='manjaro'
 CARCH=$(uname -m)
 COLORS='false'
-PACMAN_COLORS="--color=never"
-MAKEPKG_COLORS="--nocolor"
 FILESYSTEM='ext4'
 SERVICES_LIST='/tmp/services_list'
+
+# Internally used variables
+PACMAN_COLORS='--color=never'
+PACCACHE_COLORS='--nocolor'
+MAKEPKG_COLORS='--nocolor'
+ALL_OFF=''
+BOLD=''
+GREEN=''
+BLUE=''
 
 PROGNAME=${0##*/}
 
@@ -112,15 +119,17 @@ enable_colors() {
     GREEN="${BOLD}\e[1;32m"
     BLUE="${BOLD}\e[1;34m"
 
-    PACMAN_COLORS="--color=always"
-    MAKEPKG_COLORS=""
+    PACMAN_COLORS='--color=always'
+    PACCACHE_COLORS=''
+    MAKEPKG_COLORS=''
 }
 
 msg() {
     local mesg=$1; shift
-    printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
+    # Add some vertical whitespace for improved readability
+    printf "\n${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
 }
- 
+
 info() {
     local mesg=$1; shift
     printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
@@ -143,7 +152,7 @@ abort() {
 
 prune_cache(){
     info "Pruning and unmounting package cache..."
-    $NSPAWN $CHROOTDIR paccache -r
+    $NSPAWN $CHROOTDIR paccache -r $PACCACHE_COLORS
     umount $PKG_CACHE
 }
 
@@ -163,13 +172,13 @@ get_timer(){
     echo $(date +%s)
 }
 
-# $1: start timer
+# $1: timer_start
 elapsed_time(){
     echo $(echo $1 $(get_timer) | awk '{ printf "%0.2f",($2-$1)/60 }')
 }
 
 show_elapsed_time(){
-    msg "Time %s: %s minutes..." "$1" "$(elapsed_time $2)"
+    msg "Time elapsed: %s minute(s)" "$(elapsed_time $1)"
 }
 
 create_torrent() {
@@ -290,12 +299,12 @@ create_rootfs_img() {
 
     # Check if edition file exists
     if [ ! -f "$PROFILES/arm-profiles/editions/$EDITION" ]; then 
-        echo "Edition $EDITION not valid, please choose one of the listed below"
+        echo "Edition $EDITION not valid, please choose one of the editions listed below"
         echo "$(ls $PROFILES/arm-profiles/editions)"
         exit 1
     fi
 
-    msg "Creating $EDITION rootfs image for $DEVICE..."
+    msg "Creating $EDITION edition rootfs image for $DEVICE..."
 
     # Remove old rootfs if it exists
     if [ -d "$ROOTFS_IMG/rootfs_$ARCH" ]; then
@@ -417,7 +426,7 @@ create_rootfs_img() {
         fi
     done < $SERVICES_LIST
 
-    info "Applying overlay for $EDITION edition..."
+    info "Applying overlays for $EDITION edition..."
     cp -a $PROFILES/arm-profiles/overlays/$EDITION/* $ROOTFS_IMG/rootfs_$ARCH
 
     # System setup
@@ -617,7 +626,7 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
     fi
     
     if [[ "$FACTORY" = "true" ]]; then
-        info "Making settings for factory-specific image..."
+        info "Applying settings for factory-specific image..."
         case "$EDITION" in
             kde-plasma)
                 sed -i s@'Bamboo at Night/contents/images/5120x2880.png'@'manjaro-arm/generic/manjaro-pine64-2b.png'@g \
@@ -656,11 +665,11 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
     rm -f $ROOTFS_IMG/rootfs_$ARCH/etc/machine-id
     rm -rf $ROOTFS_IMG/rootfs_$ARCH/etc/pacman.d/gnupg
 
-    msg "$DEVICE $EDITION rootfs complete"
+    msg "Creating $EDITION edition rootfs image for $DEVICE completed successfully"
 }
 
 create_emmc_install() {
-    msg "Creating eMMC install image of $EDITION for $DEVICE..."
+    msg "Creating eMMC install image of $EDITION edition for $DEVICE..."
 
     # Remove old rootfs if it exists
     if [ -d $CHROOTDIR ]; then
@@ -689,7 +698,7 @@ create_emmc_install() {
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH pacman-key --populate archlinuxarm manjaro manjaro-arm || abort
     
     # Install device- and edition-specific packages
-    msg "Installing packages for eMMC installer edition of $EDITION on $DEVICE..."
+    msg "Installing eMMC installer packages for $EDITION edition on $DEVICE..."
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher \
@@ -708,11 +717,11 @@ create_emmc_install() {
     cp $LIBDIR/getty\@.service $CHROOTDIR/usr/lib/systemd/system/getty\@.service
 
     if [ -f "$IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz" ]; then
-        info "Copying local $DEVICE $EDITION image..."
+        info "Copying local image for $EDITION edition on $DEVICE..."
         cp -a $IMGDIR/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz $CHROOTDIR/var/tmp/Manjaro-ARM.img.xz
         sync
     else
-        info "Downloading $DEVICE $EDITION image..."
+        info "Downloading image for $EDITION edition on $DEVICE..."
         wget -q --show-progress --progress=bar:force:noscroll -O Manjaro-ARM.img.xz \
              https://github.com/manjaro-arm/$DEVICE-images/releases/download/$VERSION/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz \
              -O "$CHROOTDIR/var/tmp/Manjaro-ARM-$EDITION-$DEVICE-$VERSION.img.xz"
@@ -725,10 +734,12 @@ create_emmc_install() {
     rm -rf $CHROOTDIR/etc/*.pacnew
     rm -rf $CHROOTDIR/usr/lib/systemd/system/systemd-firstboot.service
     rm -rf $CHROOTDIR/etc/machine-id
+
+    msg "Creating eMMC install image of $EDITION for $DEVICE completed successfully"
 }
 
 create_img_halium() {
-    msg "Finishing image for $DEVICE $EDITION edition..."
+    msg "Finishing $EDITION image for $DEVICE..."
     info "Creating image..."
 
     ARCH='aarch64'
@@ -752,7 +763,7 @@ create_img_halium() {
 }
 
 create_img() {
-    msg "Creating $EDITION image for $DEVICE..."
+    msg "Creating $EDITION edition image for $DEVICE..."
     info "Creating $FILESYSTEM partitions..."
 
     ARCH='aarch64'
