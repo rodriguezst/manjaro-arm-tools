@@ -1052,11 +1052,7 @@ create_img() {
                     mount ${LDEV}p1 $TMPDIR/boot
                     mount ${LDEV}p2 $TMPDIR/root
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
-                    if [ $? -eq 0 ]; then
-                        mv $TMPDIR/root/boot/* $TMPDIR/boot
-                    else
-                        exit 1
-                    fi
+                    mv $TMPDIR/root/boot/* $TMPDIR/boot
                     ;;
             esac
             ;;
