@@ -768,7 +768,7 @@ create_img() {
 
     ARCH='aarch64'
     SIZE=$(du -s --block-size=MB $CHROOTDIR | awk '{ print $1 }' | sed -e 's/MB//g')
-    EXTRA_SIZE=800
+    EXTRA_SIZE=1000
     REAL_SIZE=`echo "$(($SIZE+$EXTRA_SIZE))"`
     
     # Make blank .img to be used
