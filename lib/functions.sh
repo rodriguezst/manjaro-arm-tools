@@ -493,6 +493,7 @@ create_rootfs_img() {
             useradd -m -g users -u 984 -G wheel,sys,audio,input,video,storage,lp,network,users,power,autologin \
                     -p $(openssl passwd -6 oem) -s /bin/bash oem
         $NSPAWN $ROOTFS_IMG/rootfs_$ARCH echo "oem ALL=(ALL) NOPASSWD: ALL" > $ROOTFS_IMG/rootfs_$ARCH/etc/sudoers.d/g_oem
+        sed -i s/Dark/Light/g $ROOTFS_IMG/rootfs_$ARCH/home/oem/.config/Kvantum/kvantum.kvconfig > /dev/null 2>&1
 
         case "$EDITION" in
             desq|kde-plasma|wayfire|sway)
