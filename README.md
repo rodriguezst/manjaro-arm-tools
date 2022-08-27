@@ -30,6 +30,7 @@ These scripts rely on certain packages, other than what's in the `base` package 
 * rsync (arch repo) (for `deployarmimg`)
 * bmap-tools (AUR or manjaro repo) (for BMAP support in `buildarmimg`)
 * btrfs-progs (arch repo) (for btrfs support in `buildarmimg`)
+* grub-efi-arm64 (AUR) (for generic-efi image support in `buildarmimg`)
 
 # Installation (Manjaro based distributions only)
 ## From Manjaro repositories (both x64 and aarch64)

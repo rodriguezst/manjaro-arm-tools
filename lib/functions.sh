@@ -655,6 +655,11 @@ user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
     $NSPAWN $ROOTFS_IMG/rootfs_$ARCH sed -i '$d' /var/tmp/pkglist.txt
     mv $ROOTFS_IMG/rootfs_$ARCH/var/tmp/pkglist.txt "$IMGDIR/$IMGNAME-pkgs.txt"
     
+    #if [[ "$DEVICE" = "generic-efi" ]]; then
+    #msg "Setup grub efi bootloader"
+    #$NSPAWN $ROOTFS_IMG/rootfs_$ARCH grub-install --target=arm64-efi --efi-directory=/boot/efi --removable --boot-directory=/boot/efi/EFI --bootloader-id=grub /dev/mmcblk0
+    #fi
+    
     info "Removing unwanted files from rootfs..."
     prune_cache
     rm -f $ROOTFS_IMG/rootfs_$ARCH/usr/bin/qemu-aarch64-static
@@ -881,7 +886,6 @@ create_img() {
                     # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
-                    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
@@ -1011,7 +1015,6 @@ create_img() {
                     mount ${LDEV}p1 $TMPDIR/boot/efi
                     mount ${LDEV}p2 $TMPDIR/root
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
-                    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
@@ -1134,10 +1137,6 @@ create_img() {
     echo "Boot PARTUUID is $BOOT_PART..."
     echo "Root PARTUUID is $ROOT_PART..."
 
-    if [[ "$DEVICE" = "generic-efi" ]]; then
-      sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
-    fi
-
     # Adjust the fstab to use the boot PARTUUID
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
 
@@ -1198,9 +1197,18 @@ disable_splash=1" > $TMPDIR/boot/config.txt
     else
         echo "PARTUUID=$ROOT_PART   /   $FILESYSTEM     defaults    0   1" >> $TMPDIR/root/etc/fstab
     fi
+    if [[ "$DEVICE" = "generic-efi" ]]; then
+        sed -i "s|/boot|/boot/efi|g" $TMPDIR/root/etc/fstab
+    #fi
     
     # TODO
-    # Figure out how to generate a working .efi file in our rootfs for the EFI devices
+    # Figure out how to configure grub correctly to find our kernels in /boot
+    msg "Setup GRUB for EFI..."
+    cp -a /usr/bin/qemu-aarch64-static $TMPDIR/root/usr/bin
+    grub-install --target=arm64-efi --efi-directory=$TMPDIR/boot/efi --removable --boot-directory=$TMPDIR/root/boot --bootloader-id=grub ${LDEV}
+    $NSPAWN $TMPDIR/root grub-mkconfig -o $TMPDIR/root/boot/grub/grub.cfg # This part does not work correctly yet, error: /usr/bin/grub-probe: error: failed to get canonical path of `/dev/loop0p2'
+    rm $TMPDIR/root/usr/bin/qemu-aarch64-static
+    fi
     
     # Clean up
     info "Cleaning up image..."
