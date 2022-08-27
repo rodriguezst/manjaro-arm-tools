@@ -1208,13 +1208,14 @@ disable_splash=1" > $TMPDIR/boot/config.txt
         umount $TMPDIR/root/home
     fi
     umount $TMPDIR/root
-    #if [[ "$DEVICE" = "generic-efi" ]]; then
-    #   umount $TMPDIR/boot/efi
-    #else
+    if [[ "$DEVICE" = "generic-efi" ]]; then
+       umount $TMPDIR/boot/efi
+    else
         umount $TMPDIR/boot
-    #fi
+    fi
 
     losetup -d $LDEV > /dev/null 2>&1
+    rm -rf $TMPDIR/boot/efi
     rmdir $TMPDIR/root $TMPDIR/boot
     if [[ $? != 0 ]]; then
         echo "Cleaning up image failed, aborting"
