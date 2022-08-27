@@ -868,8 +868,8 @@ create_img() {
                     # Create and mount the subvolumes
                     info "Creating btrfs subvolumes..."
                     mkdir -p $TMPDIR/root
-                    mkdir -p $TMPDIR/boot
-                    mount ${LDEV}p1 $TMPDIR/boot
+                    mkdir -p $TMPDIR/boot/efi
+                    mount ${LDEV}p1 $TMPDIR/boot/efi
                     mount -o compress=zstd "${LDEV}p2" $TMPDIR/root
                     btrfs su cr $TMPDIR/root/@ > /dev/null 2>&1
                     btrfs su cr $TMPDIR/root/@home > /dev/null 2>&1
@@ -881,7 +881,7 @@ create_img() {
                     # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
-                    mv $TMPDIR/root/boot/* $TMPDIR/boot
+                    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
@@ -1007,11 +1007,11 @@ create_img() {
                     mkfs.ext4 -O ^metadata_csum,^64bit "${LDEV}p2" -L ROOT_MNJRO > /dev/null 2>&1
                     info "Copying files to image..."
                     mkdir -p $TMPDIR/root
-                    mkdir -p $TMPDIR/boot
-                    mount ${LDEV}p1 $TMPDIR/boot
+                    mkdir -p $TMPDIR/boot/efi
+                    mount ${LDEV}p1 $TMPDIR/boot/efi
                     mount ${LDEV}p2 $TMPDIR/root
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
-                    mv $TMPDIR/root/boot/* $TMPDIR/boot
+                    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
@@ -1134,9 +1134,9 @@ create_img() {
     echo "Boot PARTUUID is $BOOT_PART..."
     echo "Root PARTUUID is $ROOT_PART..."
 
-    #if [[ "$DEVICE" = "generic-efi" ]]; then
-    #  sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
-    #fi
+    if [[ "$DEVICE" = "generic-efi" ]]; then
+      sed -i "s@/boot@/boot/efi@g" $TMPDIR/root/etc/fstab
+    fi
 
     # Adjust the fstab to use the boot PARTUUID
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
