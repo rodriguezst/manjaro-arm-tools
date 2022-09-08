@@ -1203,10 +1203,102 @@ disable_splash=1" > $TMPDIR/boot/config.txt
     # TODO
     # Figure out how to configure grub correctly to find our kernels in /boot
     msg "Setup GRUB for EFI..."
-    cp -a /usr/bin/qemu-aarch64-static $TMPDIR/root/usr/bin
     grub-install --target=arm64-efi --efi-directory=$TMPDIR/boot/efi --removable --boot-directory=$TMPDIR/root/boot --bootloader-id=grub ${LDEV}
-    $NSPAWN $TMPDIR/root grub-mkconfig -o $TMPDIR/root/boot/grub/grub.cfg # This part does not work correctly yet, error: /usr/bin/grub-probe: error: failed to get canonical path of `/dev/loop0p2'
-    rm $TMPDIR/root/usr/bin/qemu-aarch64-static
+    mkdir -p $TMPDIR/root/boot/grub
+    echo "Creating minimal grub configuration..."
+    echo '### BEGIN /etc/grub.d/00_header ###
+insmod part_gpt
+insmod part_msdos
+if [ -s $prefix/grubenv ]; then
+  load_env
+fi
+if [ "${next_entry}" ] ; then
+   set default="${next_entry}"
+   set next_entry=
+   save_env next_entry
+   set boot_once=true
+else
+   set default="${saved_entry}"
+fi
+
+if [ x"${feature_menuentry_id}" = xy ]; then
+  menuentry_id_option="--id"
+else
+  menuentry_id_option=""
+fi
+
+export menuentry_id_option
+
+if [ "${prev_saved_entry}" ]; then
+  set saved_entry="${prev_saved_entry}"
+  save_env saved_entry
+  set prev_saved_entry=
+  save_env prev_saved_entry
+  set boot_once=true
+fi
+
+function savedefault {
+  if [ -z "${boot_once}" ]; then
+    saved_entry="${chosen}"
+    save_env saved_entry
+  fi
+}
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+set menu_color_normal=light-gray/black
+set menu_color_highlight=green/black
+
+if [ x$feature_default_font_path = xy ] ; then
+   font=unicode
+else
+insmod part_gpt
+insmod ext2
+search --no-floppy --fs-uuid --set=root $ROOT_PART
+    font="/usr/share/grub/unicode.pf2"
+fi
+
+if loadfont $font ; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+fi
+terminal_input console
+terminal_output gfxterm
+if [ x$feature_timeout_style = xy ] ; then
+  set timeout_style=menu
+  set timeout=5
+# Fallback normal timeout code in case the timeout_style feature is
+# unavailable.
+else
+  set timeout=5
+fi
+### END /etc/grub.d/00_header ###' > $TMPDIR/root/boot/grub/grub.cfg
+
+    echo "### BEGIN /etc/grub.d/10_linux ###
+menuentry 'Manjaro ARM Linux' --class manjaro --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-$ROOT_PART' {
+	savedefault
+	load_video
+	set gfxpayload=keep
+	insmod gzio
+	insmod part_gpt
+	insmod ext2
+	search --no-floppy --fs-uuid --set=root $ROOT_PART
+	linux	/boot/Image root=UUID=$ROOT_PART rw  quiet
+	initrd	/boot/initramfs-linux.img
+}" >> $TMPDIR/root/boot/grub/grub.cfg
     fi
     
     # Clean up
