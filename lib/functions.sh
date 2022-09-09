@@ -1131,6 +1131,7 @@ create_img() {
     else
         BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p1" | awk '{ print $2 }')
         ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{ print $2 }')
+        ROOT_UUID=$(lsblk -p -o NAME,UUID | grep "${LDEV}p2" | awk '{ print $2 }')
     fi
 
     echo "Boot PARTUUID is $BOOT_PART..."
@@ -1288,15 +1289,15 @@ fi
 ### END /etc/grub.d/00_header ###' > $TMPDIR/root/boot/grub/grub.cfg
 
     echo "### BEGIN /etc/grub.d/10_linux ###
-menuentry 'Manjaro ARM Linux' --class manjaro --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-$ROOT_PART' {
+menuentry 'Manjaro ARM Linux' --class manjaro --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-$ROOT_UUID' {
 	savedefault
 	load_video
 	set gfxpayload=keep
 	insmod gzio
 	insmod part_gpt
 	insmod ext2
-	search --no-floppy --fs-uuid --set=root $ROOT_PART
-	linux	/boot/Image root=UUID=$ROOT_PART rw  quiet
+	search --no-floppy --fs-uuid --set=root $ROOT_UUID
+	linux	/boot/Image root=UUID=$ROOT_UUID rw quiet
 	initrd	/boot/initramfs-linux.img
 }" >> $TMPDIR/root/boot/grub/grub.cfg
     fi
