@@ -1267,7 +1267,7 @@ if [ x$feature_default_font_path = xy ] ; then
 else
 insmod part_gpt
 insmod ext2
-search --no-floppy --fs-uuid --set=root $ROOT_PART
+search --no-floppy --fs-uuid --set=root $ROOT_UUID
     font="/usr/share/grub/unicode.pf2"
 fi
 
