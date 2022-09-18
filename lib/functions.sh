@@ -1199,10 +1199,7 @@ disable_splash=1" > $TMPDIR/boot/config.txt
     fi
     if [[ "$DEVICE" = "generic-efi" ]]; then
         sed -i "s|/boot|/boot/efi|g" $TMPDIR/root/etc/fstab
-    #fi
-    
-    # TODO
-    # Figure out how to configure grub correctly to find our kernels in /boot
+
     msg "Setup GRUB for EFI..."
     grub-install --target=arm64-efi --efi-directory=$TMPDIR/boot/efi --removable --boot-directory=$TMPDIR/root/boot --bootloader-id=grub ${LDEV}
     mkdir -p $TMPDIR/root/boot/grub
@@ -1259,7 +1256,7 @@ function load_video {
   fi
 }
 
-set menu_color_normal=light-gray/black
+set menu_color_normal=white/black
 set menu_color_highlight=green/black
 
 if [ x$feature_default_font_path = xy ] ; then
@@ -1289,7 +1286,7 @@ fi
 ### END /etc/grub.d/00_header ###' > $TMPDIR/root/boot/grub/grub.cfg
 
     echo "### BEGIN /etc/grub.d/10_linux ###
-menuentry 'Manjaro ARM Linux' --class manjaro --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-$ROOT_UUID' {
+menuentry 'Manjaro ARM Setup' --class manjaro --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-$ROOT_UUID' {
 	savedefault
 	load_video
 	set gfxpayload=keep
@@ -1297,7 +1294,7 @@ menuentry 'Manjaro ARM Linux' --class manjaro --class gnu-linux --class gnu --cl
 	insmod part_gpt
 	insmod ext2
 	search --no-floppy --fs-uuid --set=root $ROOT_UUID
-	linux	/boot/Image root=UUID=$ROOT_UUID rw quiet
+	linux	/boot/Image root=UUID=$ROOT_UUID rw quiet splash plymouth.ignore-serial-consoles
 	initrd	/boot/initramfs-linux.img
 }" >> $TMPDIR/root/boot/grub/grub.cfg
     fi
