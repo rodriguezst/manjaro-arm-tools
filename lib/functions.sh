@@ -1136,6 +1136,7 @@ create_img() {
 
     echo "Boot PARTUUID is $BOOT_PART..."
     echo "Root PARTUUID is $ROOT_PART..."
+    echo "Root UUID is $ROOT_UUID..."
 
     # Adjust the fstab to use the boot PARTUUID
     sed -i "s/LABEL=BOOT_MNJRO/PARTUUID=$BOOT_PART/g" $TMPDIR/root/etc/fstab
