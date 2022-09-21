@@ -1204,6 +1204,15 @@ disable_splash=1" > $TMPDIR/boot/config.txt
     msg "Setup GRUB for EFI..."
     grub-install --target=arm64-efi --efi-directory=$TMPDIR/boot/efi --removable --boot-directory=$TMPDIR/root/boot --bootloader-id=grub ${LDEV}
     mkdir -p $TMPDIR/root/boot/grub
+    if [ -f $TMPDIR/root/boot/Image ]; then
+        KERNEL="/boot/Image"
+        INITRAMFS="/boot/initramfs-linux.img"
+    else
+        KERNEL="/boot/$(ls $TMPDIR/root/boot/ | grep vmlinuz)"
+        INITRAMFS="/boot/$(ls $TMPDIR/root/boot/ | grep initramfs | grep -v fallback)"
+    fi
+    echo "Kernel image is $KERNEL..."
+    echo "Initramfs image is $INITRAMFS..."
     echo "Creating minimal grub configuration..."
     echo '### BEGIN /etc/grub.d/00_header ###
 insmod part_gpt
@@ -1295,8 +1304,8 @@ menuentry 'Manjaro ARM Setup' --class manjaro --class gnu-linux --class gnu --cl
 	insmod part_gpt
 	insmod ext2
 	search --no-floppy --fs-uuid --set=root $ROOT_UUID
-	linux	/boot/Image root=UUID=$ROOT_UUID rw quiet splash plymouth.ignore-serial-consoles
-	initrd	/boot/initramfs-linux.img
+	linux	$KERNEL root=UUID=$ROOT_UUID rw quiet splash plymouth.ignore-serial-consoles
+	initrd	$INITRAMFS
 }" >> $TMPDIR/root/boot/grub/grub.cfg
     fi
     
@@ -1314,7 +1323,8 @@ menuentry 'Manjaro ARM Setup' --class manjaro --class gnu-linux --class gnu --cl
 
     losetup -d $LDEV > /dev/null 2>&1
     rm -rf $TMPDIR/boot/efi
-    rmdir $TMPDIR/root $TMPDIR/boot
+    rm -rf $TMPDIR/boot
+    rmdir $TMPDIR/root
     if [[ $? != 0 ]]; then
         echo "Cleaning up image failed, aborting"
         exit 1
