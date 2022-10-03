@@ -1131,7 +1131,7 @@ create_img() {
     else
         BOOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p1" | awk '{ print $2 }')
         ROOT_PART=$(lsblk -p -o NAME,PARTUUID | grep "${LDEV}p2" | awk '{ print $2 }')
-        ROOT_UUID=$(lsblk -p -o NAME,UUID | grep "${LDEV}p2" | awk '{ print $2 }')
+        ROOT_UUID=$(blkid | grep "${LDEV}p2" | awk '{print $3}' | grep -oP "[^/]=\K.*" | sed 's/\"//g')
     fi
 
     echo "Boot PARTUUID is $BOOT_PART..."
