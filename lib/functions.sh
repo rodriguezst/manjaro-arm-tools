@@ -1304,8 +1304,8 @@ menuentry 'Manjaro ARM Setup' --class manjaro --class gnu-linux --class gnu --cl
 	insmod part_gpt
 	insmod ext2
 	search --no-floppy --fs-uuid --set=root $ROOT_UUID
-	linux	$KERNEL root=UUID=$ROOT_UUID rw quiet splash plymouth.ignore-serial-consoles
-	initrd	$INITRAMFS
+	linux	$(if [[ "$FILESYSTEM" = "btrfs" ]]; then echo "/@"; fi)$KERNEL root=UUID=$ROOT_UUID rw quiet splash plymouth.ignore-serial-consoles $(if [[ "$FILESYSTEM" = "btrfs" ]]; then echo "rootflags=subvol=@/ rootfstype=btrfs"; fi)
+	initrd	$(if [[ "$FILESYSTEM" = "btrfs" ]]; then echo "/@"; fi)$INITRAMFS
 }" >> $TMPDIR/root/boot/grub/grub.cfg
     fi
     
