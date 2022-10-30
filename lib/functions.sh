@@ -26,6 +26,7 @@ PASSWORD='manjaro'
 CARCH=$(uname -m)
 COLORS='false'
 FILESYSTEM='ext4'
+COMPRESSION='xz'
 SERVICES_LIST='/tmp/services_list'
 
 # Internally used variables
@@ -88,6 +89,7 @@ usage_build_img() {
     echo "    -c                 Enable support for colored output"
     echo "    -f                 Create image with factory settings"
     echo "    -p <filesystem>    Filesystem for the root partition; default is ext4, options are ext4 and btrfs"
+    echo "    -z <compression>   Compression to use on the image file; default is xz, options are xz and zstd"
     echo "    -h                 Show this help"
     exit $1
 }
@@ -1345,16 +1347,27 @@ create_bmap() {
 }
 
 compress() {
-    if [ -f $IMGDIR/$IMGNAME.img.xz ]; then
-        info "Removing existing compressed image file $IMGNAME.img.xz..."
-        rm -rf $IMGDIR/$IMGNAME.img.xz
-    fi
-
-    info "Compressing $IMGNAME.img..."
+    info "Compressing $IMGNAME.img with $COMPRESSION..."
     # Compress the image
     cd $IMGDIR
-    xz -zv --threads=0 $IMGNAME.img
-    chmod 0666 $IMGDIR/$IMGNAME.img.xz
+    case "$COMPRESSION" in
+        xz)
+            if [ -f $IMGDIR/$IMGNAME.img.xz ]; then
+                info "Removing existing compressed image file $IMGNAME.img.xz..."
+                rm -rf $IMGDIR/$IMGNAME.img.xz
+            fi
+            xz -zv --threads=0 $IMGNAME.img
+            chmod 0666 $IMGDIR/$IMGNAME.img.xz
+            ;;
+        zstd)
+            if [ -f $IMGDIR/$IMGNAME.img.zst ]; then
+                info "Removing existing compressed image file $IMGNAME.img.zst..."
+                rm -rf $IMGDIR/$IMGNAME.img.zst
+            fi
+            zstd -z -10 -T0 --rm $IMGNAME.img
+            chmod 0666 $IMGDIR/$IMGNAME.img.zst
+            ;;
+    esac
 
     info "Removing rootfs_$ARCH..."
     mount | grep "$ROOTFS_IMG/rootfs_$ARCH/var/cache/pacman/pkg" > /dev/null 2>&1

@@ -22,7 +22,7 @@ check_root
 check_running
 
 # Available options
-opt=":e:d:v:i:b:nfxhk:mos:p:c"
+opt=":e:d:v:i:b:nfxhk:mos:p:cz:"
 
 while getopts "${opt}" arg; do
   case $arg in
@@ -65,6 +65,9 @@ while getopts "${opt}" arg; do
      ;;
     p)
       FILESYSTEM="${OPTARG}"
+      ;;
+    z)
+      COMPRESSION="${OPTARG}"
       ;;
     \?)
       echo "Option -${OPTARG} is not valid, aborting"

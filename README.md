@@ -20,7 +20,7 @@ These scripts rely on certain packages, other than what's in the `base` package 
 * polkit (arch repo)
 * gnugpg (arch repo)
 * wget (arch repo)
-* zstd (arch repo) - unzstd used for early package verification
+* zstd (arch repo) - unzstd used for early package verification and zstd image compression
 * systemd-nspawn with support for `--resolv-conf=copy-host` (arch repo)
 
 ### Optional Dependencies
@@ -99,7 +99,7 @@ Profiles that gets used are from this [Gitlab](https://gitlab.manjaro.org/manjar
 **Syntax**
 
 ```
-sudo buildarmimg [-d device] [-e edition] [-v version] [-n] [-x] [-i packages] [-b branch] [-m]
+sudo buildarmimg [-d device] [-e edition] [-v version] [-n] [-x] [-i packages] [-b branch] [-m] [-z compression]
 ```
 
 To build a minimal image version 18.07 for the raspberry pi 3 on arm-unstable branch with bmap support:
