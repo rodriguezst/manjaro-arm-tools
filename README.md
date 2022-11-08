@@ -14,7 +14,7 @@ These scripts rely on certain packages, other than what's in the `base` package 
 * parted (arch repo)
 * libarchive (arch repo)
 * git (arch repo)
-* binfmt-user-static (AUR) or manjaro-arm-qemu-static (manjaro repo)
+* qemu-user-static-binfmt (arch repo)
 * dosfstools (arch repo)
 * pacman (arch repo)
 * polkit (arch repo)
