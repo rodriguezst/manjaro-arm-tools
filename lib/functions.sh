@@ -367,13 +367,13 @@ create_rootfs_img() {
         cubocore|gnome-mobile|phosh|plasma-mobile|plasma-mobile-dev|kde-bigscreen|maui-shell|nemomobile)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
+                             $PKG_SHARED $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             ;;
 
         minimal|server)
             $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                 pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                             $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
+                             $PKG_SHARED $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             ;;
 
         *)
@@ -381,11 +381,11 @@ create_rootfs_img() {
             if [[ "$DEVICE" = "clockworkpi-a06" ]]; then
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs dialog manjaro-arm-oem-install manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
+                                 $PKG_SHARED $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             else
                 $NSPAWN $ROOTFS_IMG/rootfs_$ARCH \
                     pacman -Syyu base systemd systemd-libs calamares-arm-oem manjaro-system manjaro-release \
-                                 $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
+                                 $PKG_SHARED $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS || abort
             fi
             ;;
     esac
@@ -709,7 +709,7 @@ create_emmc_install() {
     echo "Server = $BUILDSERVER/arm-$BRANCH/\$repo/\$arch" > $CHROOTDIR/etc/pacman.d/mirrorlist
     mount --bind $PKGDIR/pkg-cache $PKG_CACHE
     $NSPAWN $CHROOTDIR pacman -Syyu base manjaro-system manjaro-release manjaro-arm-emmc-flasher \
-                                    $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS
+                                    $PKG_SHARED $PKG_EDITION $PKG_DEVICE --noconfirm --noprogressbar $PACMAN_COLORS
 
     # Enable services
     info "Enabling services..."
