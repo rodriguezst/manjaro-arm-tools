@@ -105,6 +105,7 @@ timer_start=$(get_timer)
 
 # Package lists
 PKG_DEVICE=$(grep "^[^#;]" $PROFILES/arm-profiles/devices/$DEVICE | awk '{print $1}')
+PKG_SHARED=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/shared | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//')
 PKG_EDITION=$(grep "^[^#;]" $PROFILES/arm-profiles/editions/$EDITION | sed -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//')
 cat $PROFILES/arm-profiles/services/$EDITION \
     | sed -e '/^#/d' -e 's/>'${DEVICE//pro/}' //' -e '/^>/d' -e 's/#.*//' \
