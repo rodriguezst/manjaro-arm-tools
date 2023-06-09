@@ -956,7 +956,7 @@ create_img() {
         *)
             # Create the boot and root partitions
             case "$DEVICE" in
-                oc2|on2|on2-plus|on2l|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x| \
+                oc2|on2|on2-plus|on2l|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro| \
                 rpi3|rpi4|rpi4-cutiepi|pinephone|g1-tpc)
                     parted -s $LDEV mklabel msdos > /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 32M 512M > /dev/null 2>&1
