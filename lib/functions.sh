@@ -1174,25 +1174,62 @@ create_img() {
 
     if [[ "$DEVICE" = "rpi4" ]]; then
         echo "===> Installing default /boot/config.txt file..."
-        echo "#
-# See /boot/overlays/README for all available options
-#
+        echo "# See /boot/overlays/README for all available options
 
-#gpu_mem=64
-initramfs initramfs-linux.img followkernel
-kernel=kernel8.img
+# Uncomment some or all of these to enable optional Hardware interfaces
+#dtparam=i2c_arm=on
+#dtparam=i2s=on
+#dtparam=spi=on
+
+# Run in 64bit mode
 arm_64bit=1
-disable_overscan=1
-dtparam=krnbt=on
 
-#enable sound
+# Auto load correct initramfs files if found
+auto_initramfs=1
+
+# Run as fast as the firmware/board allows
+arm_boost=1
+
+# Disable compensation for displays with overscan
+disable_overscan=1
+
+# Enable sound
 dtparam=audio=on
+# Uncomment if no sound thru hdmi
 #hdmi_drive=2
 
-#enable vc4
+# Auto load overlays for detected cameras
+camera_auto_detect=1
+# Auto load overlays for detected DSI displays
+display_auto_detect=1
+
+# Enable DRM VC4 V3D driver
 dtoverlay=vc4-kms-v3d
+# For pi4's and above boards uncomment next line & Comment out above line
+#dtoverlay=vc4-kms-v3d,cma-512
 max_framebuffers=2
-disable_splash=1" > $TMPDIR/boot/config.txt
+
+# Don't have the firmware create an initial video= setting in cmdline.txt
+# Use the kernel default instead
+#disable_fw_kms_setup=1
+
+# Disable rainbow screen at boot
+disable_splash=1
+
+# RPi 5B/4B/400 ONLY
+# For 4k content @ 60 Hz refresh rate, uncomment hdmi_enable_4kp60=1
+#hdmi_enable_4kp60=1
+# If video breaks with hdmi_enable_4kp60=1 uncomment
+#force_turbo=1
+
+
+[cm4]
+# Enable host mode on the 2711 built-in XHCI USB controller
+# This line should be remoed if the legacy DWC2 controller is required
+otg_mode=1
+
+
+[all]" > $TMPDIR/boot/config.txt
     fi
     
     if [[ "$FILESYSTEM" = "btrfs" ]]; then
