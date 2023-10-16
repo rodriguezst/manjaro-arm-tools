@@ -799,7 +799,7 @@ create_img() {
             # Create the boot and root partitions
             case "$DEVICE" in
                 oc2|on2|on2-plus|on2l|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x| \
-                rpi3|rpi4|rpi4-cutiepi|pinephone|g1-tpc)
+                rpi3|rpi4|rpi4-cutiepi|pinephone|opi-zero3)
                     parted -s $LDEV mklabel msdos > /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 32M 512M > /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
@@ -957,7 +957,7 @@ create_img() {
             # Create the boot and root partitions
             case "$DEVICE" in
                 oc2|on2|on2-plus|on2l|oc4|ohc4|vim1|vim2|vim3|vim3l|radxa-zero|radxa-zero2|gtking-pro|gsking-x| \
-                rpi3|rpi4|rpi4-cutiepi|pinephone|g1-tpc)
+                rpi3|rpi4|rpi4-cutiepi|pinephone|opi-zero3)
                     parted -s $LDEV mklabel msdos > /dev/null 2>&1
                     parted -s $LDEV mkpart primary fat32 32M 512M > /dev/null 2>&1
                     START=`cat /sys/block/$DEV/${DEV}p1/start`
@@ -1087,6 +1087,10 @@ create_img() {
                 ;;
             opi3-lts)
                 dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-orangepi3-lts.bin of=${LDEV} conv=fsync bs=128k seek=1 > /dev/null 2>&1
+                ;;
+            opi-zero3)
+                dd if=/dev/zero of=${LDEV} bs=1k count=1023 seek=1 status=noxfer  > /dev/null 2>&1
+                dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE.bin of=${LDEV} bs=1k seek=8 conv=fsync  > /dev/null 2>&1
                 ;;
             pinephone)
                 dd if=$TMPDIR/boot/u-boot-sunxi-with-spl-$DEVICE-528.bin of=${LDEV} conv=fsync bs=8k seek=1 > /dev/null 2>&1
