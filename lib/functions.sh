@@ -1098,7 +1098,7 @@ create_img() {
 
             # Rockchip RK33XX and RK35XX mainline U-Boots
             pbpro|rockpro64|rockpi4b|rockpi4c|nanopc-t4|rock64|roc-cc|stationp1|pinephonepro|clockworkpi-a06| \
-            pinetab2|quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-m3|station-p2|om1|opi4-lts|opi-800|opi5|itx-rk3588j|opi3b)
+            pinetab2|quartz64-a|quartz64-b|soquartz-cm4|rock3a|pinenote|edgev|station-m2|station-m3|station-p2|om1|opi4-lts|opi-800|opi5|itx-rk3588j|opi3b|opi5-plus)
                 dd if=$TMPDIR/boot/idbloader.img of=${LDEV} seek=64 conv=notrunc,fsync > /dev/null 2>&1
                 dd if=$TMPDIR/boot/u-boot.itb of=${LDEV} seek=16384 conv=notrunc,fsync > /dev/null 2>&1
                 ;;
