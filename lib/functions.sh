@@ -534,12 +534,11 @@ autologin-session=i3" >> $ROOTFS_IMG/rootfs_$ARCH/etc/lightdm/lightdm.conf
             fi
         fi
 
-        # For greetd based Sway edition
-        if [ -f $ROOTFS_IMG/rootfs_$ARCH/usr/bin/sway ]; then
-            echo '[initial_session]
-command = "sway --config /etc/greetd/oem-setup"
-user = "oem"' >> $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
+        # For greetd
+        if [ -f $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.initial.toml ]; then
+            /usr/bin/cp -b $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.initial.toml $ROOTFS_IMG/rootfs_$ARCH/etc/greetd/config.toml
         fi
+
         # For Gnome edition
         if [ -f $ROOTFS_IMG/rootfs_$ARCH/usr/bin/gdm ]; then
             sed -i s/"\[daemon\]"/"\[daemon\]\nAutomaticLogin=oem\nAutomaticLoginEnable=True"/g \
