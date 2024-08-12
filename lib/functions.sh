@@ -195,6 +195,11 @@ check_root () {
         echo "This utility requires root permissions to run"
         exit
     fi
+    # check if host is x86_64 and qemu-aarch64-static is available
+    [[ $(uname -r) == "x86_64" ]] && \
+        [[ $(which qemu-aarch64-static) =~ "qemu-aarch64-static" ]] || \
+            echo "ERROR: This utility requires package 'qemu-user-static-binfmt'\n" && exit 1
+
 }
 
 check_branch () {
@@ -292,8 +297,8 @@ create_rootfs_pkg() {
 }
 
 configure_cli_autologin() {
-    mkdir $ROOTFS_IMG/rootfs_$ARCH/etc/systemd/system/getty@tty1.service.d
-    cat << EOF >> $ROOTFS_IMG/rootfs_$ARCH/etc//systemd/system/getty@tty1.service.d/autologin.conf
+    mkdir -p $ROOTFS_IMG/rootfs_$ARCH/etc/systemd/system/getty@tty1.service.d
+    cat << 'EOF' >> $ROOTFS_IMG/rootfs_$ARCH/etc/systemd/system/getty@tty1.service.d/autologin.conf
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin root %I $TERM
