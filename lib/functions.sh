@@ -196,8 +196,8 @@ check_root () {
         exit
     fi
     # check if host is x86_64 and qemu-aarch64-static is available
-    if [[ $(uname -r) == "x86_64" ]] && ! [[ $(which qemu-aarch64-static) =~ "qemu-aarch64-static" ]]; then
-        echo "ERROR: This utility requires package 'qemu-user-static-binfmt'\n"
+    if [[ $(uname -m) == "x86_64" ]] && [[ $(command -v qemu-aarch64-static)x == "x" ]]; then
+        echo "ERROR: This utility requires package 'qemu-user-static-binfmt'"
         exit 1
     fi
 }
