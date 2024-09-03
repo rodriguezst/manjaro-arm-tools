@@ -918,6 +918,7 @@ create_img() {
                     # Copy the rootfs contents over to the filesystem
                     info "Copying files to image..."
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
+		    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
@@ -1047,6 +1048,7 @@ create_img() {
                     mount ${LDEV}p1 $TMPDIR/boot/efi
                     mount ${LDEV}p2 $TMPDIR/root
                     cp -a $ROOTFS_IMG/rootfs_$ARCH/* $TMPDIR/root
+		    mv $TMPDIR/root/boot/efi/* $TMPDIR/boot/efi
                     ;;
 
                 quartz64-bsp)
